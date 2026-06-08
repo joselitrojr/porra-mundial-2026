@@ -908,6 +908,76 @@ function RetosSec({spc,upSpc,locked}){
 }
 
 // ── PARTIDOS TAB ──────────────────────────────────────────────────────────────
+// ── CLASIFICACIÓN DE GRUPO ───────────────────────────────────────────────────
+function calcClasificacion(teams, matchesGrupo){
+  const tabla={};
+  teams.forEach(t=>{tabla[t]={pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0};});
+  matchesGrupo.filter(m=>m.result).forEach(m=>{
+    const rl=+m.result.l, rv=+m.result.v;
+    if(isNaN(rl)||isNaN(rv))return;
+    const tl=tabla[m.l], tv=tabla[m.v];
+    if(!tl||!tv)return;
+    tl.pj++;tv.pj++;
+    tl.gf+=rl;tl.gc+=rv;
+    tv.gf+=rv;tv.gc+=rl;
+    if(rl>rv){tl.g++;tl.pts+=3;tv.p++;}
+    else if(rv>rl){tv.g++;tv.pts+=3;tl.p++;}
+    else{tl.e++;tv.e++;tl.pts++;tv.pts++;}
+  });
+  return Object.entries(tabla)
+    .map(([name,s])=>({name,dif:s.gf-s.gc,...s}))
+    .sort((a,b)=>b.pts-a.pts||b.dif-a.dif||b.gf-a.gf);
+}
+
+function TablaClasificacion({grupo, allM}){
+  const teams=GR[grupo]||[];
+  const matchesG=allM.filter(m=>m.g===grupo);
+  const hayResultados=matchesG.some(m=>m.result);
+  if(!hayResultados)return(
+    <div style={{background:"rgba(0,0,0,0.3)",borderRadius:10,padding:"12px",textAlign:"center",fontSize:12,color:"#2d3748",marginBottom:14}}>
+      Sin resultados aún en el Grupo {grupo}
+    </div>
+  );
+  const tabla=calcClasificacion(teams,matchesG);
+  const cols=["#","Equipo","PJ","G","E","P","GF","GC","DIF","PTS"];
+  return(
+    <div style={{marginBottom:16}}>
+      <div style={{fontSize:11,color:"#e8b923",fontWeight:700,letterSpacing:1,marginBottom:8,textTransform:"uppercase"}}>📊 Clasificación Grupo {grupo}</div>
+      <div style={{background:"rgba(0,0,0,0.4)",borderRadius:12,overflow:"hidden",border:"1px solid rgba(255,255,255,0.07)"}}>
+        {/* Header */}
+        <div style={{display:"grid",gridTemplateColumns:"20px 1fr 28px 28px 28px 28px 28px 28px 36px 36px",gap:0,padding:"7px 10px",background:"rgba(232,185,35,0.08)",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+          {cols.map(c=><div key={c} style={{fontSize:10,fontWeight:700,color:"#4a5568",textAlign:c==="Equipo"?"left":"center",letterSpacing:0.5}}>{c}</div>)}
+        </div>
+        {/* Rows */}
+        {tabla.map((row,i)=>{
+          const isTop2=i<2;
+          const bg=i===0?"rgba(232,185,35,0.08)":i===1?"rgba(16,185,129,0.06)":"transparent";
+          const posCol=i===0?"#e8b923":i===1?"#10b981":i===2?"#e8b923":"#2d3748";
+          const difCol=row.dif>0?"#10b981":row.dif<0?"#ef4444":"#4a5568";
+          return(
+            <div key={row.name} style={{display:"grid",gridTemplateColumns:"20px 1fr 28px 28px 28px 28px 28px 28px 36px 36px",gap:0,padding:"8px 10px",background:bg,borderBottom:i<tabla.length-1?"1px solid rgba(255,255,255,0.04)":"none",alignItems:"center"}}>
+              <div style={{fontSize:11,fontWeight:700,color:posCol,textAlign:"center"}}>{i+1}</div>
+              <div style={{fontSize:12,fontWeight:isTop2?700:400,color:isTop2?"#e2e8f0":"#94a3b8",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",paddingRight:4}}>
+                {row.name.split(" ").slice(0,-1).join(" ")||row.name}
+                {isTop2&&<span style={{marginLeft:4,fontSize:9,color:i===0?"#e8b923":"#10b981"}}>●</span>}
+              </div>
+              {[row.pj,row.g,row.e,row.p,row.gf,row.gc].map((v,j)=>(
+                <div key={j} style={{fontSize:11,textAlign:"center",color:"#4a5568"}}>{v}</div>
+              ))}
+              <div style={{fontSize:11,textAlign:"center",color:difCol,fontWeight:600}}>{row.dif>0?"+"+row.dif:row.dif}</div>
+              <div style={{fontSize:13,textAlign:"center",fontWeight:900,color:isTop2?"#e8b923":"#e2e8f0"}}>{row.pts}</div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{display:"flex",gap:12,marginTop:6,paddingLeft:4}}>
+        <div style={{fontSize:10,color:"#e8b923"}}>● Clasificado</div>
+        <div style={{fontSize:10,color:"#10b981"}}>● En zona de clasificación</div>
+      </div>
+    </div>
+  );
+}
+
 function PartidosTab({allM}){
   const[gf,setGf]=useState("A");
   const gs=Object.keys(GR);
@@ -918,18 +988,27 @@ function PartidosTab({allM}){
       <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
         {gs.map(g=>{
           const hasR=allM.filter(m=>m.g===g).some(m=>m.result);
-          return<button key={g} style={{...S.chip,...(gf===g?S.chipA:{}),...(hasR?{borderColor:"#4ade8044"}:{})}} onClick={()=>setGf(g)}>Gr.{g}</button>;
+          return<button key={g} style={{...S.chip,...(gf===g?S.chipA:{}),...(hasR?{borderColor:"rgba(16,185,129,0.3)"}:{})}} onClick={()=>setGf(g)}>Gr.{g}</button>;
         })}
         {allM.some(m=>m.ph!=="grupos")&&<button style={{...S.chip,...(isElim?S.chipA:{})}} onClick={()=>setGf("ELIM")}>Elim.</button>}
       </div>
+
+      {/* Tabla de clasificación — solo en grupos */}
+      {!isElim&&<TablaClasificacion grupo={gf} allM={allM}/>}
+
+      {/* Partidos */}
+      <div style={{fontSize:11,color:"#4a5568",fontWeight:700,letterSpacing:1,marginBottom:8,textTransform:"uppercase"}}>⚽ Partidos</div>
       {shown.length===0?<div style={S.empty}>Sin partidos todavía</div>:shown.map(m=>(
-        <div key={m.id} style={{...S.mCard,borderColor:m.result?"#4ade8033":"#141420"}}>
-          <div style={{fontSize:11,color:"#333",marginBottom:4}}>{fd(m.d||m.date||"")}{m.ph!=="grupos"?" · "+PHL[m.ph]:""}</div>
+        <div key={m.id} style={{...S.mCard,borderColor:m.result?"rgba(16,185,129,0.25)":"rgba(255,255,255,0.06)"}}>
+          <div style={{fontSize:11,color:"#2d3748",marginBottom:4}}>{fd(m.d||m.date||"")}{m.ph!=="grupos"?" · "+PHL[m.ph]:""}</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",gap:8}}>
-            <div style={{textAlign:"right",fontWeight:600,color:"#ddd",fontSize:13}}>{m.l}</div>
-            {m.result?<div style={{textAlign:"center",fontWeight:900,color:"#4ade80",fontSize:22,minWidth:56}}>{m.result.l}–{m.result.v}</div>
-            :<div style={{textAlign:"center",color:"#1a1a1a",fontSize:18,minWidth:56}}>vs</div>}
-            <div style={{fontWeight:600,color:"#ddd",fontSize:13}}>{m.v}</div>
+            <div style={{textAlign:"right",fontWeight:600,color:"#e2e8f0",fontSize:13}}>{m.l}</div>
+            {m.result?(
+              <div style={{textAlign:"center",fontWeight:900,color:"#10b981",fontSize:22,minWidth:60,background:"rgba(16,185,129,0.08)",borderRadius:8,padding:"2px 6px"}}>{m.result.l}–{m.result.v}</div>
+            ):(
+              <div style={{textAlign:"center",color:"rgba(255,255,255,0.1)",fontSize:16,minWidth:60}}>vs</div>
+            )}
+            <div style={{fontWeight:600,color:"#e2e8f0",fontSize:13}}>{m.v}</div>
           </div>
         </div>
       ))}
