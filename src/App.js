@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { dbGet, dbSet } from "./supabase";
+import * as XLSX from "xlsx";
 
 
 const GR = {
@@ -168,38 +169,118 @@ function useCountdown(target){
 
 // ── EXPORT ───────────────────────────────────────────────────────────────────
 function exportCSV(parts,allM,rPre,rSpc){
-  const rows=[["Participante","Total pts","Campeón","Subcampeón","3er puesto","Goleador","MVP","Fetiche"]];
+  const wb=XLSX.utils.book_new();
   const sorted=[...parts].sort((a,b)=>totPts(b,allM,rPre,rSpc)-totPts(a,allM,rPre,rSpc));
+  const PHL_FULL={grupos:"Fase de Grupos",octavos:"Octavos",cuartos:"Cuartos",semifinales:"Semifinales",final:"Final"};
+
+  // ── HOJA RANKING GENERAL ──────────────────────────────────────────────────
+  const rankRows=[["#","Jugador","Puntos Totales","Puntos Pre-Mundial","Puntos Partidos","Puntos Retos","Premio estimado (€)","Fetiche"]];
+  const bote=parts.length*20;
+  sorted.forEach((p,i)=>{
+    const fetM=allM.find(m=>m.id===p.fetiche);
+    const pPre=prePts(p.pre||{},rPre);
+    const pSpc=spcPts(p.spc||{},rSpc);
+    let pM=0;allM.forEach(m=>{pM+=mPts((p.mp||{})[m.id],m.result,m.ph||"grupos",m.id===p.fetiche);});
+    const premio=i===0?Math.round(bote*0.6):i===1?Math.round(bote*0.25):i===2?Math.round(bote*0.15):0;
+    rankRows.push([i+1,p.name,totPts(p,allM,rPre,rSpc),pPre,Math.round(pM*10)/10,pSpc,premio||"-",fetM?`${fetM.l} vs ${fetM.v}`:"-"]);
+  });
+  const wsRank=XLSX.utils.aoa_to_sheet(rankRows);
+  wsRank["!cols"]=[{wch:4},{wch:18},{wch:14},{wch:16},{wch:15},{wch:13},{wch:20},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,wsRank,"🏆 Ranking");
+
+  // ── HOJA POR JUGADOR ──────────────────────────────────────────────────────
   sorted.forEach(p=>{
-    rows.push([
-      p.name,
-      totPts(p,allM,rPre,rSpc),
-      p.pre?.campeon||"-",
-      p.pre?.subcampeon||"-",
-      p.pre?.tercero||"-",
-      p.pre?.goleador||"-",
-      p.pre?.mvp||"-",
-      p.fetiche||"-"
-    ]);
-  });
-  rows.push([]);
-  rows.push(["=== PRONÓSTICOS POR PARTIDO ==="]);
-  rows.push(["Participante","Partido","Pronóstico","Resultado real","Pts"]);
-  allM.filter(m=>m.result).forEach(m=>{
-    sorted.forEach(p=>{
-      const pred=(p.mp||{})[m.id];
-      if(pred){
-        const pts=mPts(pred,m.result,m.ph||"grupos",m.id===p.fetiche);
-        rows.push([p.name,`${m.l} vs ${m.v}`,`${pred.l}-${pred.v}`,`${m.result.l}-${m.result.v}`,pts]);
-      }
+    const rows=[];
+    const tot=totPts(p,allM,rPre,rSpc);
+    const fetM=allM.find(m=>m.id===p.fetiche);
+
+    // Header jugador
+    rows.push([`PRONÓSTICOS DE ${p.name.toUpperCase()}`]);
+    rows.push([`Total: ${tot} pts`,`Registrado: ${p.registeredAt?new Date(p.registeredAt).toLocaleDateString("es-ES"):"-"}`]);
+    rows.push([]);
+
+    // PRE-MUNDIAL
+    rows.push(["── PRE-MUNDIAL ──────────────────────────────"]);
+    rows.push(["Campo","Tu pronóstico","Resultado real","Puntos"]);
+    const preItems=[
+      ["Campeón del mundo (30pts)",p.pre?.campeon,rPre?.campeon,p.pre?.campeon&&rPre?.campeon&&p.pre.campeon===rPre.campeon?30:0],
+      ["Subcampeón (20pts)",p.pre?.subcampeon,rPre?.subcampeon,p.pre?.subcampeon&&rPre?.subcampeon&&p.pre.subcampeon===rPre.subcampeon?20:0],
+      ["3er puesto (15pts)",p.pre?.tercero,rPre?.tercero,p.pre?.tercero&&rPre?.tercero&&p.pre.tercero===rPre.tercero?15:0],
+      ["Máx. goleador (20pts)",p.pre?.goleador,rPre?.goleador,p.pre?.goleador&&rPre?.goleador&&p.pre.goleador===rPre.goleador?20:0],
+      ["MVP (15pts)",p.pre?.mvp,rPre?.mvp,p.pre?.mvp&&rPre?.mvp&&p.pre.mvp===rPre.mvp?15:0],
+    ];
+    (p.pre?.semis||[]).forEach((s,i)=>{
+      const hit=s&&(rPre?.semis||[]).includes(s);
+      preItems.push([`Semifinalista ${i+1} (10pts)`,s,"-",hit?10:0]);
     });
+    preItems.forEach(([campo,pred,real,pts])=>{
+      rows.push([campo,pred||"-",real||"(pendiente)",rPre?pts:"-"]);
+    });
+    rows.push([]);
+
+    // PARTIDO FETICHE
+    rows.push(["── PARTIDO FETICHE ──────────────────────────"]);
+    rows.push(["Partido elegido","Tu pronóstico","Resultado real","Puntos","Multiplicador"]);
+    if(fetM){
+      const pred=(p.mp||{})[fetM.id];
+      const res=fetM.result;
+      const pts=res&&pred?mPts(pred,res,fetM.ph||"grupos",true):"-";
+      rows.push([`${fetM.l} vs ${fetM.v}`,pred?`${pred.l}-${pred.v}`:"-",res?`${res.l}-${res.v}`:"(pendiente)",res?pts:"-","×5 exacto / ×3 1X2"]);
+    } else {
+      rows.push(["No seleccionado","-","-","-","-"]);
+    }
+    rows.push([]);
+
+    // RETOS ESPECIALES
+    rows.push(["── RETOS ESPECIALES ─────────────────────────"]);
+    rows.push(["Reto","Tu pronóstico","Resultado real","Puntos"]);
+    const retoItems=[
+      ["Primer expulsado (10pts)",p.spc?.expulsado,rSpc?.expulsado,p.spc?.expulsado&&rSpc?.expulsado&&p.spc.expulsado===rSpc.expulsado?10:0],
+      ["Primer hat-trick (10pts)",p.spc?.hattrick,rSpc?.hattrick,p.spc?.hattrick&&rSpc?.hattrick&&p.spc.hattrick===rSpc.hattrick?10:0],
+      ["Equipo revelación (15pts)",p.spc?.revelacion,rSpc?.revelacion,p.spc?.revelacion&&rSpc?.revelacion&&p.spc.revelacion===rSpc.revelacion?15:0],
+      ["Mayor goleada (10pts)",p.spc?.goleada,rSpc?.goleada,p.spc?.goleada&&rSpc?.goleada&&p.spc.goleada===rSpc.goleada?10:0],
+    ];
+    retoItems.forEach(([reto,pred,real,pts])=>{
+      rows.push([reto,pred||"-",real||"(pendiente)",rSpc?pts:"-"]);
+    });
+    rows.push([]);
+
+    // PARTIDOS
+    rows.push(["── PRONÓSTICOS DE PARTIDOS ──────────────────"]);
+    rows.push(["Fecha","Fase","Partido","Tu pronóstico","Resultado real","Puntos","Fetiche"]);
+    const grupos=["A","B","C","D","E","F","G","H","I","J","K","L"];
+    const fases=["grupos","octavos","cuartos","semifinales","final"];
+    fases.forEach(fase=>{
+      const matchesFase=fase==="grupos"
+        ?grupos.flatMap(g=>allM.filter(m=>m.g===g&&m.ph==="grupos"))
+        :allM.filter(m=>m.ph===fase);
+      if(matchesFase.length===0)return;
+      matchesFase.forEach(m=>{
+        const pred=(p.mp||{})[m.id];
+        const res=m.result;
+        const isFet=m.id===p.fetiche;
+        const pts=res&&pred?mPts(pred,res,m.ph||"grupos",isFet):"-";
+        rows.push([
+          m.d||m.date||"-",
+          PHL_FULL[m.ph]||m.ph,
+          `${m.l} vs ${m.v}`,
+          pred?`${pred.l}-${pred.v}`:"-",
+          res?`${res.l}-${res.v}`:"(pendiente)",
+          res?pts:"-",
+          isFet?"⭐ SÍ":""
+        ]);
+      });
+    });
+
+    // Nombre de hoja max 31 chars, sin caracteres especiales
+    const sheetName=p.name.replace(/[\/*?:\[\]]/g,"").substring(0,28);
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"]=[{wch:12},{wch:18},{wch:30},{wch:16},{wch:16},{wch:8},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws,sheetName);
   });
-  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;a.download="porra-mundial-2026.csv";a.click();
-  URL.revokeObjectURL(url);
+
+  // Descargar
+  XLSX.writeFile(wb,"porra-mundial-2026.xlsx");
 }
 
 // ── HELPERS UI ────────────────────────────────────────────────────────────────
@@ -238,20 +319,20 @@ function Pos({n}){
 function CountdownWidget(){
   const{days,hrs,mins,secs,done}=useCountdown(PRIMER_PARTIDO.getTime());
   if(done)return(
-    <div style={{background:"linear-gradient(135deg,#052e16,#064e3b)",border:"1px solid #4ade80",borderRadius:12,padding:"12px 16px",marginBottom:14,textAlign:"center"}}>
-      <div style={{fontSize:20}}>⚽</div>
-      <div style={{color:"#4ade80",fontWeight:700,fontSize:14,marginTop:4}}>¡El Mundial ya ha comenzado!</div>
+    <div style={{background:"linear-gradient(135deg,#052e16,#065f46)",border:"1px solid #10b98144",borderRadius:14,padding:"14px 16px",marginBottom:14,textAlign:"center",boxShadow:"0 0 20px rgba(16,185,129,0.15)"}}>
+      <div style={{fontSize:28,marginBottom:4}}>⚽</div>
+      <div style={{color:"#10b981",fontWeight:800,fontSize:15,letterSpacing:1}}>¡EL MUNDIAL HA COMENZADO!</div>
     </div>
   );
   const pad=n=>String(n).padStart(2,"0");
   return(
-    <div style={{background:"linear-gradient(135deg,#0a0a2a,#14142e)",border:"1px solid #fbbf2444",borderRadius:12,padding:"12px 16px",marginBottom:14}}>
-      <div style={{textAlign:"center",fontSize:11,color:"#888",marginBottom:8,letterSpacing:2,textTransform:"uppercase"}}>⚽ México vs Sudáfrica · 11 Jun · 21:00h</div>
+    <div style={{background:"linear-gradient(135deg,#0a0f1e,#0d1a0d)",border:"1px solid rgba(232,185,35,0.2)",borderRadius:14,padding:"14px 16px",marginBottom:14,boxShadow:"0 4px 20px rgba(0,0,0,0.4)"}}>
+      <div style={{textAlign:"center",fontSize:11,color:"#4a5568",marginBottom:10,letterSpacing:2,textTransform:"uppercase",fontWeight:600}}>⚽ México vs Sudáfrica · 11 Jun · 21:00h</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6}}>
         {[[days,"DÍAS"],[hrs,"HORAS"],[mins,"MIN"],[pad(secs),"SEG"]].map(([v,l])=>(
-          <div key={l} style={{background:"#0d0d14",borderRadius:8,padding:"8px 4px",textAlign:"center",border:"1px solid #1e1e2e"}}>
-            <div style={{fontWeight:900,fontSize:24,color:"#fbbf24",lineHeight:1}}>{v}</div>
-            <div style={{fontSize:9,color:"#555",marginTop:2,letterSpacing:1}}>{l}</div>
+          <div key={l} style={{background:"rgba(0,0,0,0.5)",borderRadius:10,padding:"10px 4px",textAlign:"center",border:"1px solid rgba(232,185,35,0.15)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05)"}}>
+            <div style={{fontWeight:900,fontSize:26,background:"linear-gradient(180deg,#fff5c0,#e8b923)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",lineHeight:1}}>{v}</div>
+            <div style={{fontSize:9,color:"#4a5568",marginTop:3,letterSpacing:2,fontWeight:600}}>{l}</div>
           </div>
         ))}
       </div>
@@ -318,12 +399,16 @@ export default function App(){
   );
 
   if(view==="welcome")return(
-    <div style={{...S.app,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"24px",background:"radial-gradient(ellipse at top,#1a1a3e,#080810)"}}>
+    <div style={{...S.app,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"24px",background:"radial-gradient(ellipse at 50% 0%,#0a1628 0%,#0d1a0d 40%,#1a0800 100%)"}}>
       <div style={{fontSize:64,marginBottom:8}}>🏆</div>
-      <div style={{fontSize:32,fontWeight:900,color:"#fbbf24",letterSpacing:3,marginBottom:4}}>SÚPER PORRA</div>
-      <div style={{fontSize:13,color:"#666",letterSpacing:4,marginBottom:20}}>MUNDIAL 2026</div>
+      <div style={{fontSize:32,fontWeight:900,background:"linear-gradient(135deg,#e8b923,#fff5c0,#e8b923)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:3,marginBottom:4}}>SÚPER PORRA</div>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
+        <div style={{height:1,width:40,background:"linear-gradient(90deg,transparent,#c8102e)"}}/>
+        <div style={{fontSize:12,color:"#c8102e",letterSpacing:5,fontWeight:700}}>MUNDIAL 2026</div>
+        <div style={{height:1,width:40,background:"linear-gradient(90deg,#c8102e,transparent)"}}/>
+      </div>
       <CountdownWidget/>
-      <div style={{width:"100%",maxWidth:400,background:"#0d0d14",border:"1px solid #1e1e2e",borderRadius:14,padding:"18px",marginBottom:24}}>
+      <div style={{width:"100%",maxWidth:400,background:"linear-gradient(135deg,rgba(10,15,30,0.95),rgba(10,20,12,0.95))",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"18px",marginBottom:24,backdropFilter:"blur(10px)",boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}}>
         <div style={{color:"#fbbf24",fontWeight:700,fontSize:13,marginBottom:12}}>📋 Cómo funciona</div>
         {[["🎟","Inscripción","20€ — una vez confirmado, bloqueado para siempre"],["⚽","72 partidos","Pronostica todos los partidos de la fase de grupos"],["⭐","Partido fetiche","Márcalo: si aciertas exacto ×5, si aciertas 1X2 ×3"],["📈","Multiplicadores","×1 grupos · ×1.5 octavos · hasta ×5 final"],["💰","Premios","60% · 25% · 15% del bote total"]].map(([i,t,d])=>(
           <div key={t} style={{display:"flex",gap:10,marginBottom:10}}>
@@ -332,7 +417,7 @@ export default function App(){
           </div>
         ))}
       </div>
-      <button style={{...S.btnGold,width:"100%",maxWidth:400,padding:"15px",fontSize:15,borderRadius:12}}
+      <button style={{...S.btnGold,width:"100%",maxWidth:400,padding:"16px",fontSize:15,borderRadius:14,letterSpacing:1,background:"linear-gradient(135deg,#c8102e,#e8b923,#c8102e)",backgroundSize:"200% 100%"}}
         onClick={()=>{sessionStorage.setItem("seen","1");setView("main");}}>
         ¡Entrar a la porra! →
       </button>
@@ -402,15 +487,15 @@ export default function App(){
           <div>
             <CountdownWidget/>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
-              {[{pct:.6,l:"1º",col:"#fbbf24",ico:"🥇"},{pct:.25,l:"2º",col:"#cbd5e1",ico:"🥈"},{pct:.15,l:"3º",col:"#cd7f32",ico:"🥉"}].map((p,i)=>(
-                <div key={i} style={{background:"#0d0d14",border:"1px solid "+p.col+"44",borderRadius:10,padding:"10px 8px",textAlign:"center"}}>
-                  <div style={{fontSize:20}}>{p.ico}</div>
-                  <div style={{color:p.col,fontWeight:900,fontSize:18}}>{Math.round(bote*p.pct)}€</div>
-                  <div style={{fontSize:10,color:"#555"}}>{p.l} Premio</div>
+              {[{pct:.6,l:"1er Premio",col:"#e8b923",ico:"🥇",bg:"linear-gradient(135deg,#422006,#78350f)",sh:"0 0 20px rgba(232,185,35,0.25)"},{pct:.25,l:"2º Premio",col:"#cbd5e1",ico:"🥈",bg:"linear-gradient(135deg,#1a1a2e,#16213e)",sh:"none"},{pct:.15,l:"3er Premio",col:"#cd7f32",ico:"🥉",bg:"linear-gradient(135deg,#1c0a00,#3b1f00)",sh:"none"}].map((p,i)=>(
+                <div key={i} style={{background:p.bg,border:"1px solid "+p.col+"44",borderRadius:12,padding:"12px 8px",textAlign:"center",boxShadow:p.sh}}>
+                  <div style={{fontSize:22}}>{p.ico}</div>
+                  <div style={{color:p.col,fontWeight:900,fontSize:20,marginTop:2}}>{Math.round(bote*p.pct)}€</div>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginTop:2}}>{p.l}</div>
                 </div>
               ))}
             </div>
-            {!allLocked&&scores.length>0&&<div style={{background:"#0a0a1a",border:"1px solid #1e1e3e",borderRadius:8,padding:"8px 12px",fontSize:12,color:"#60a5fa",marginBottom:10,textAlign:"center"}}>🔒 Pronósticos privados hasta que todos confirmen</div>}
+            {!allLocked&&scores.length>0&&<div style={{background:"rgba(37,99,235,0.1)",border:"1px solid rgba(37,99,235,0.25)",borderRadius:10,padding:"8px 14px",fontSize:12,color:"#93c5fd",marginBottom:10,textAlign:"center",backdropFilter:"blur(4px)"}}>🔒 Pronósticos privados hasta que todos confirmen</div>}
             {scores.length===0?<div style={S.empty}>El ranking aparecerá cuando haya participantes</div>:
               scores.map((p,i)=>(
                 <div key={p.id} style={{...S.row,...(i===scores.length-1&&scores.length>1?{borderColor:"#7f1d1d33",background:"#140a0a"}:{})}}>
@@ -655,7 +740,7 @@ function PredictView({p,allM,db,onSave,onBack}){
         ))}
       </div>
       <div style={S.content}>
-        {sec==="pre"&&<PreSec pre={data.pre} upPre={upPre} upSemi={upSemi} locked={locked||!!db.rPre}/>}
+        {sec==="pre"&&<PreSec pre={data.pre} upPre={upPre} upSemi={upSemi} locked={locked&&!!db.rPre}/>}
         {sec==="grupos"&&<GruposSec mp={mp} gr={gr} setGr={setGr} upM={upM} grupoM={grupoM} results={db.results||{}} locked={locked} fetiche={data.fetiche} setFetiche={setFetiche}/>}
         {sec==="elim"&&<ElimSec mp={mp} upM={upM} elimM={elimM} locked={locked} fetiche={data.fetiche} setFetiche={setFetiche}/>}
         {sec==="retos"&&<RetosSec spc={data.spc} upSpc={upSpc} locked={locked}/>}
@@ -1110,7 +1195,7 @@ function AdminView({db,upDb,allM,onBack}){
               <div style={{fontWeight:700,color:"#4ade80",fontSize:13,marginBottom:8}}>📥 Exportar datos</div>
               <div style={{fontSize:12,color:"#555",marginBottom:10}}>Descarga un CSV con todos los pronósticos y puntuaciones</div>
               <button style={{...S.btnGold,width:"100%",background:"linear-gradient(135deg,#065f46,#047857)"}} onClick={()=>exportCSV(db.parts||[],allM,db.rPre,db.rSpc)}>
-                📥 Descargar CSV completo
+                📥 Descargar Excel completo
               </button>
             </div>
 
@@ -1140,38 +1225,228 @@ function AdminView({db,upDb,allM,onBack}){
 }
 
 const S={
-  app:{minHeight:"100vh",background:"#080810",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#fff",maxWidth:600,margin:"0 auto"},
-  hdr:{background:"linear-gradient(180deg,#12122a,#0c0c1c)",borderBottom:"2px solid #fbbf24",padding:"12px 16px"},
+  // ── LAYOUT ────────────────────────────────────────────────────────────────
+  app:{
+    minHeight:"100vh",
+    background:"linear-gradient(160deg,#0a1628 0%,#0d1f0d 50%,#1a0a00 100%)",
+    fontFamily:"'Segoe UI',system-ui,sans-serif",
+    color:"#fff",
+    maxWidth:600,
+    margin:"0 auto",
+    position:"relative",
+  },
+
+  // ── HEADER ────────────────────────────────────────────────────────────────
+  hdr:{
+    background:"linear-gradient(180deg,#0a1628 0%,#091220 100%)",
+    borderBottom:"2px solid transparent",
+    borderImage:"linear-gradient(90deg,#c8102e,#e8b923,#c8102e) 1",
+    padding:"12px 16px",
+    boxShadow:"0 4px 20px rgba(0,0,0,0.5)",
+  },
   hdrRow:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:6},
-  t1:{fontSize:20,fontWeight:900,color:"#fbbf24",letterSpacing:2,lineHeight:1},
-  t2:{fontSize:11,color:"#555",letterSpacing:3,textTransform:"uppercase"},
-  bote:{background:"linear-gradient(135deg,#052e16,#064e3b)",border:"1px solid #4ade8066",borderRadius:20,padding:"4px 12px",fontSize:13,color:"#4ade80",fontWeight:700},
-  bannerR:{background:"#1c0505",border:"1px solid #7f1d1d",borderRadius:8,padding:"6px 10px",fontSize:12,color:"#ff6b35",marginBottom:6},
-  bannerG:{background:"#051a05",border:"1px solid #14532d",borderRadius:8,padding:"5px 10px",fontSize:12,color:"#86efac",marginBottom:6},
-  tabs:{display:"flex",background:"#080810",borderBottom:"1px solid #141420"},
-  tab:{flex:1,padding:"11px 2px",background:"transparent",border:"none",color:"#444",cursor:"pointer",fontSize:11,fontWeight:600,borderBottom:"2px solid transparent"},
-  tabA:{color:"#fbbf24",borderBottomColor:"#fbbf24",background:"#0d0d08"},
-  content:{padding:"14px 16px",paddingBottom:60},
-  secNav:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",background:"#080810",borderBottom:"1px solid #141420"},
-  snBtn:{padding:"10px 4px",background:"transparent",border:"none",color:"#444",cursor:"pointer",borderBottom:"2px solid transparent",textAlign:"center",fontSize:11,fontWeight:600},
-  snA:{color:"#fff",borderBottomColor:"#fbbf24",background:"#0d0d08"},
-  row:{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"#0d0d14",borderRadius:10,marginBottom:6,border:"1px solid #141420"},
-  card:{background:"#0d0d14",border:"1px solid #141420",borderRadius:12,padding:"14px",marginBottom:10},
-  regCard:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,background:"linear-gradient(135deg,#0a1a0a,#071207)",border:"1px solid #14532d",borderRadius:12,padding:"14px",marginBottom:16},
-  mCard:{padding:"10px 12px",background:"#0d0d14",borderRadius:8,marginBottom:6,border:"1px solid"},
-  block:{background:"#0a0a12",border:"1px solid #141420",borderRadius:10,padding:"12px",marginBottom:12},
-  blockT:{fontWeight:700,fontSize:13,color:"#ddd",marginBottom:8},
-  empty:{color:"#333",textAlign:"center",padding:"40px 16px",fontSize:14,lineHeight:1.8},
-  inp:{background:"#0d0d14",border:"1px solid #1e1e1e",borderRadius:8,padding:"8px 12px",color:"#fff",fontSize:14,width:"100%",boxSizing:"border-box",outline:"none"},
-  sel:{background:"#0d0d14",border:"1px solid #1e1e1e",borderRadius:8,padding:"8px 10px",color:"#fff",fontSize:13,width:"100%",boxSizing:"border-box",outline:"none"},
-  scoreI:{background:"#0d0d14",border:"1px solid #1e1e1e",borderRadius:8,padding:"7px 2px",color:"#fff",fontSize:15,fontWeight:700,width:44,textAlign:"center",outline:"none",boxSizing:"border-box"},
-  pinInp:{background:"#0d0d14",border:"1px solid #333",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:14,width:90,outline:"none"},
-  btnGold:{background:"linear-gradient(135deg,#b45309,#92400e)",border:"none",borderRadius:8,padding:"9px 16px",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",whiteSpace:"nowrap"},
-  btnSm:{background:"#1e3a5f",border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:12,cursor:"pointer"},
-  btnGhost:{background:"transparent",border:"1px solid #222",borderRadius:6,padding:"5px 10px",color:"#555",fontSize:12,cursor:"pointer"},
-  btnAct:{background:"#0e1e30",border:"none",borderRadius:6,padding:"6px 10px",color:"#ccc",fontSize:12,cursor:"pointer",whiteSpace:"nowrap"},
-  backBtn:{background:"#111",border:"1px solid #222",borderRadius:8,padding:"6px 12px",color:"#ccc",cursor:"pointer",fontSize:13},
-  chip:{background:"#0d0d14",border:"1px solid #1a1a1a",borderRadius:14,padding:"4px 9px",color:"#555",fontSize:12,cursor:"pointer",position:"relative"},
-  chipA:{background:"#0a1a0a",borderColor:"#4ade80",color:"#4ade80"},
-  fl:{fontSize:13,color:"#666",marginBottom:4},
+  t1:{
+    fontSize:21,fontWeight:900,
+    background:"linear-gradient(135deg,#e8b923,#fff5c0,#e8b923)",
+    WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
+    letterSpacing:2,lineHeight:1,
+    textShadow:"none",
+  },
+  t2:{fontSize:11,color:"#4a5568",letterSpacing:4,textTransform:"uppercase"},
+  bote:{
+    background:"linear-gradient(135deg,#064e3b,#065f46)",
+    border:"1px solid #10b98166",
+    borderRadius:20,padding:"4px 12px",
+    fontSize:13,color:"#10b981",fontWeight:700,
+    boxShadow:"0 0 12px rgba(16,185,129,0.2)",
+  },
+
+  // ── BANNERS ───────────────────────────────────────────────────────────────
+  bannerR:{
+    background:"linear-gradient(135deg,#450a0a,#7f1d1d)",
+    border:"1px solid #dc262644",
+    borderRadius:8,padding:"6px 12px",fontSize:12,
+    color:"#fca5a5",marginBottom:6,
+    boxShadow:"0 2px 8px rgba(220,38,38,0.2)",
+  },
+  bannerG:{
+    background:"linear-gradient(135deg,#052e16,#064e3b)",
+    border:"1px solid #16a34a44",
+    borderRadius:8,padding:"5px 12px",fontSize:12,
+    color:"#86efac",marginBottom:6,
+  },
+
+  // ── TABS ──────────────────────────────────────────────────────────────────
+  tabs:{
+    display:"flex",
+    background:"rgba(0,0,0,0.4)",
+    borderBottom:"1px solid rgba(232,185,35,0.15)",
+    backdropFilter:"blur(10px)",
+  },
+  tab:{
+    flex:1,padding:"12px 2px",
+    background:"transparent",border:"none",
+    color:"#4a5568",cursor:"pointer",fontSize:11,fontWeight:700,
+    borderBottom:"2px solid transparent",
+    transition:"all 0.2s",letterSpacing:0.5,
+  },
+  tabA:{
+    color:"#e8b923",
+    borderBottomColor:"#e8b923",
+    background:"rgba(232,185,35,0.06)",
+  },
+  content:{padding:"14px 16px",paddingBottom:70},
+
+  // ── SECTION NAV ───────────────────────────────────────────────────────────
+  secNav:{
+    display:"grid",gridTemplateColumns:"repeat(4,1fr)",
+    background:"rgba(0,0,0,0.5)",
+    borderBottom:"1px solid rgba(255,255,255,0.06)",
+  },
+  snBtn:{
+    padding:"10px 4px",background:"transparent",border:"none",
+    color:"#4a5568",cursor:"pointer",
+    borderBottom:"2px solid transparent",
+    textAlign:"center",fontSize:11,fontWeight:700,
+    transition:"all 0.2s",
+  },
+  snA:{color:"#e8b923",borderBottomColor:"#e8b923",background:"rgba(232,185,35,0.05)"},
+
+  // ── CARDS ─────────────────────────────────────────────────────────────────
+  row:{
+    display:"flex",alignItems:"center",gap:12,
+    padding:"12px 14px",
+    background:"linear-gradient(135deg,rgba(15,20,40,0.9),rgba(10,25,15,0.9))",
+    borderRadius:12,marginBottom:6,
+    border:"1px solid rgba(255,255,255,0.07)",
+    boxShadow:"0 2px 10px rgba(0,0,0,0.3)",
+    backdropFilter:"blur(4px)",
+  },
+  card:{
+    background:"linear-gradient(135deg,rgba(12,18,38,0.95),rgba(10,20,12,0.95))",
+    border:"1px solid rgba(255,255,255,0.07)",
+    borderRadius:14,padding:"14px",marginBottom:10,
+    boxShadow:"0 4px 16px rgba(0,0,0,0.3)",
+  },
+  regCard:{
+    display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,
+    background:"linear-gradient(135deg,#052e16,#064e3b)",
+    border:"1px solid #10b98133",
+    borderRadius:14,padding:"16px",marginBottom:16,
+    boxShadow:"0 4px 20px rgba(16,185,129,0.15)",
+  },
+  mCard:{
+    padding:"12px 14px",
+    background:"linear-gradient(135deg,rgba(12,18,38,0.9),rgba(10,20,12,0.9))",
+    borderRadius:10,marginBottom:6,
+    border:"1px solid",
+    boxShadow:"0 2px 8px rgba(0,0,0,0.2)",
+  },
+  block:{
+    background:"rgba(5,10,25,0.8)",
+    border:"1px solid rgba(255,255,255,0.06)",
+    borderRadius:12,padding:"14px",marginBottom:12,
+    backdropFilter:"blur(4px)",
+  },
+  blockT:{fontWeight:700,fontSize:13,color:"#e2e8f0",marginBottom:10},
+
+  // ── PRIZES ────────────────────────────────────────────────────────────────
+  prizeCard1:{
+    background:"linear-gradient(135deg,#422006,#78350f)",
+    border:"1px solid #e8b92366",
+    borderRadius:12,padding:"12px 8px",textAlign:"center",
+    boxShadow:"0 0 20px rgba(232,185,35,0.3)",
+  },
+  prizeCard2:{
+    background:"linear-gradient(135deg,#1a1a2e,#16213e)",
+    border:"1px solid #94a3b866",
+    borderRadius:12,padding:"12px 8px",textAlign:"center",
+  },
+  prizeCard3:{
+    background:"linear-gradient(135deg,#1c0a00,#3b1f00)",
+    border:"1px solid #cd7f3266",
+    borderRadius:12,padding:"12px 8px",textAlign:"center",
+  },
+
+  // ── EMPTY ─────────────────────────────────────────────────────────────────
+  empty:{color:"#2d3748",textAlign:"center",padding:"48px 16px",fontSize:14,lineHeight:1.8},
+
+  // ── FORMS ─────────────────────────────────────────────────────────────────
+  inp:{
+    background:"rgba(5,10,25,0.8)",
+    border:"1px solid rgba(255,255,255,0.1)",
+    borderRadius:10,padding:"9px 13px",
+    color:"#fff",fontSize:14,
+    width:"100%",boxSizing:"border-box",outline:"none",
+    transition:"border-color 0.2s",
+  },
+  sel:{
+    background:"rgba(5,10,25,0.8)",
+    border:"1px solid rgba(255,255,255,0.1)",
+    borderRadius:10,padding:"9px 11px",
+    color:"#fff",fontSize:13,
+    width:"100%",boxSizing:"border-box",outline:"none",
+  },
+  scoreI:{
+    background:"rgba(5,10,25,0.9)",
+    border:"1px solid rgba(255,255,255,0.15)",
+    borderRadius:10,padding:"8px 2px",
+    color:"#e8b923",fontSize:16,fontWeight:900,
+    width:46,textAlign:"center",outline:"none",boxSizing:"border-box",
+  },
+  pinInp:{
+    background:"rgba(5,10,25,0.8)",
+    border:"1px solid rgba(255,255,255,0.1)",
+    borderRadius:8,padding:"7px 11px",
+    color:"#fff",fontSize:14,width:95,outline:"none",
+  },
+
+  // ── BUTTONS ───────────────────────────────────────────────────────────────
+  btnGold:{
+    background:"linear-gradient(135deg,#c8102e,#a00d25)",
+    border:"none",borderRadius:10,
+    padding:"10px 18px",color:"#fff",
+    fontWeight:700,fontSize:13,cursor:"pointer",
+    whiteSpace:"nowrap",
+    boxShadow:"0 4px 14px rgba(200,16,46,0.4)",
+    transition:"all 0.2s",
+  },
+  btnSm:{
+    background:"linear-gradient(135deg,#1e3a5f,#1a3255)",
+    border:"none",borderRadius:8,
+    padding:"6px 12px",color:"#fff",fontSize:12,cursor:"pointer",
+  },
+  btnGhost:{
+    background:"rgba(255,255,255,0.04)",
+    border:"1px solid rgba(255,255,255,0.12)",
+    borderRadius:8,padding:"5px 12px",
+    color:"#718096",fontSize:12,cursor:"pointer",
+    transition:"all 0.2s",
+  },
+  btnAct:{
+    background:"rgba(15,30,60,0.8)",
+    border:"1px solid rgba(255,255,255,0.08)",
+    borderRadius:8,padding:"7px 12px",
+    color:"#a0aec0",fontSize:12,cursor:"pointer",whiteSpace:"nowrap",
+  },
+  backBtn:{
+    background:"rgba(255,255,255,0.06)",
+    border:"1px solid rgba(255,255,255,0.1)",
+    borderRadius:10,padding:"7px 14px",
+    color:"#a0aec0",cursor:"pointer",fontSize:13,
+  },
+
+  // ── CHIPS ─────────────────────────────────────────────────────────────────
+  chip:{
+    background:"rgba(10,15,30,0.7)",
+    border:"1px solid rgba(255,255,255,0.08)",
+    borderRadius:16,padding:"5px 11px",
+    color:"#4a5568",fontSize:12,cursor:"pointer",
+    position:"relative",transition:"all 0.15s",
+  },
+  chipA:{
+    background:"rgba(16,185,129,0.12)",
+    borderColor:"#10b98166",color:"#10b981",
+  },
+  fl:{fontSize:13,color:"#4a5568",marginBottom:5},
 };
