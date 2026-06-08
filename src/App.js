@@ -340,6 +340,42 @@ function CountdownWidget(){
   );
 }
 
+// ── MI POSICIÓN ──────────────────────────────────────────────────────────────
+function MiPosicion({scores,myName,bote}){
+  const idx=scores.findIndex(p=>p.name===myName);
+  if(idx===-1)return null;
+  const p=scores[idx];
+  const pos=idx+1;
+  const next=scores[idx-1];
+  const diff=next?Math.round((next.tot-p.tot)*10)/10:null;
+  const posCol=pos===1?"#e8b923":pos===2?"#10b981":pos===3?"#10b981":"#94a3b8";
+  const premio=pos<=3?Math.round(bote*[.6,.25,.15][pos-1]):0;
+  return(
+    <div style={{background:"linear-gradient(135deg,rgba(232,185,35,0.1),rgba(200,16,46,0.08))",border:"1px solid rgba(232,185,35,0.25)",borderRadius:14,padding:"12px 14px",marginBottom:14,boxShadow:"0 4px 16px rgba(0,0,0,0.3)"}}>
+      <div style={{fontSize:10,color:"#4a5568",letterSpacing:2,fontWeight:700,textTransform:"uppercase",marginBottom:8}}>📍 Tu posición</div>
+      <div style={{display:"flex",alignItems:"center",gap:12}}>
+        <div style={{width:44,height:44,borderRadius:"50%",background:pos===1?"linear-gradient(135deg,#e8b923,#f59e0b)":pos<=3?"linear-gradient(135deg,#10b981,#059669)":"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:20,color:pos<=2?"#000":"#fff",flexShrink:0,boxShadow:pos===1?"0 0 16px rgba(232,185,35,0.4)":"none"}}>
+          {pos}
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:800,fontSize:17,color:posCol}}>{p.tot} <span style={{fontSize:12,color:"#4a5568",fontWeight:400}}>pts</span></div>
+          {diff!==null&&diff>0?(
+            <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>A <span style={{color:"#ef4444",fontWeight:700}}>{diff} pts</span> del {pos-1}º ({next.name.split(" ")[0]})</div>
+          ):(
+            <div style={{fontSize:12,color:"#10b981",marginTop:2}}>🏆 ¡Líder de la porra!</div>
+          )}
+        </div>
+        {premio>0&&(
+          <div style={{textAlign:"center",background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:10,padding:"6px 10px"}}>
+            <div style={{fontSize:11,color:"#4a5568"}}>Premio est.</div>
+            <div style={{fontSize:18,fontWeight:900,color:"#10b981"}}>+{premio}€</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── APP ───────────────────────────────────────────────────────────────────────
 export default function App(){
   const[db,setDb]=useState({parts:[],extraM:[],results:{},rPre:null,rSpc:null,deadline:"",loaded:false});
@@ -349,13 +385,26 @@ export default function App(){
   const[pin,setPin]=useState("");
   const[showPin,setShowPin]=useState(false);
   const[selId,setSelId]=useState(null);
+  const[prevRanks,setPrevRanks]=useState({}); // id -> posicion anterior
+  const[myName,setMyName]=useState(()=>sessionStorage.getItem("myName")||null);
 
   const load=useCallback(async()=>{
     const[parts,extraM,results,rPre,rSpc,deadline]=await Promise.all([
       dbGet("parts"),dbGet("extraM"),dbGet("results"),dbGet("rPre"),dbGet("rSpc"),dbGet("deadline")
     ]);
     const dl=deadline||"";
-    setDb({parts:parts||[],extraM:extraM||[],results:results||{},rPre:rPre||null,rSpc:rSpc||null,deadline:dl,loaded:true});
+    const newDb={parts:parts||[],extraM:extraM||[],results:results||{},rPre:rPre||null,rSpc:rSpc||null,deadline:dl,loaded:true};
+    setDb(prev=>{
+      // Track rank changes: compare previous scores with new ones
+      if(prev.loaded&&prev.parts&&prev.parts.length>0){
+        const allMprev=[...PM.map(m=>({...m,ph:"grupos",result:(prev.results||{})[m.id]||null})),...(prev.extraM||[])];
+        const prevSorted=[...(prev.parts||[])].map(p=>({...p,tot:totPts(p,allMprev,prev.rPre,prev.rSpc)})).sort((a,b)=>b.tot-a.tot);
+        const ranks={};
+        prevSorted.forEach((p,i)=>{ranks[p.id]=i+1;});
+        setPrevRanks(ranks);
+      }
+      return newDb;
+    });
   },[]);
 
   useEffect(()=>{load();},[load]);
@@ -424,7 +473,7 @@ export default function App(){
     </div>
   );
 
-  if(view==="register")return <RegisterView db={db} upDb={upDb} closed={closed} saveDraft={saveDraft} loadDraft={loadDraft} deleteDraft={deleteDraft} onDone={()=>setView("main")} onBack={()=>setView("main")}/>;
+  if(view==="register")return <RegisterView db={db} upDb={upDb} closed={closed} saveDraft={saveDraft} loadDraft={loadDraft} deleteDraft={deleteDraft} onDone={(name)=>{if(name){setMyName(name);sessionStorage.setItem("myName",name);}setView("main");}} onBack={()=>setView("main")}/>;
   if(view==="predict"&&selId){
     const p=(db.parts||[]).find(x=>x.id===selId);
     if(!p){setView("main");return null;}
@@ -486,6 +535,7 @@ export default function App(){
         {tab==="ranking"&&(
           <div>
             <CountdownWidget/>
+            {myName&&scores.length>0&&<MiPosicion scores={scores} myName={myName} bote={bote}/>}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
               {[{pct:.6,l:"1er Premio",col:"#e8b923",ico:"🥇",bg:"linear-gradient(135deg,#422006,#78350f)",sh:"0 0 20px rgba(232,185,35,0.25)"},{pct:.25,l:"2º Premio",col:"#cbd5e1",ico:"🥈",bg:"linear-gradient(135deg,#1a1a2e,#16213e)",sh:"none"},{pct:.15,l:"3er Premio",col:"#cd7f32",ico:"🥉",bg:"linear-gradient(135deg,#1c0a00,#3b1f00)",sh:"none"}].map((p,i)=>(
                 <div key={i} style={{background:p.bg,border:"1px solid "+p.col+"44",borderRadius:12,padding:"12px 8px",textAlign:"center",boxShadow:p.sh}}>
@@ -549,7 +599,7 @@ export default function App(){
                         <div style={{fontWeight:800,fontSize:18,color:"#4ade80",marginTop:2}}>{sc?.tot||0}<span style={{fontSize:11,color:"#333",fontWeight:400}}> pts</span></div>
                         {feticheM&&<div style={{fontSize:11,color:"#fbbf24",marginTop:2}}>⭐ Fetiche: {feticheM.l.split(" ")[0]} vs {feticheM.v.split(" ")[0]}</div>}
                       </div>
-                      {!p.locked&&!closed&&<button style={S.btnGold} onClick={()=>{setSelId(p.id);setView("predict");}}>✏️ Editar</button>}
+                      {!p.locked&&!closed&&<button style={S.btnGold} onClick={()=>{setSelId(p.id);setView("predict");setMyName(p.name);sessionStorage.setItem("myName",p.name);}}>✏️ Editar</button>}
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
                       <Chip label="Pre-Mundial" done={pD} total={5}/>
@@ -619,7 +669,7 @@ function RegisterView({db,upDb,closed,saveDraft,loadDraft,deleteDraft,onDone,onB
     const np={id:Date.now().toString(),name:name.trim(),pre:draft.pre,spc:draft.spc,mp:draft.mp,fetiche:draft.fetiche,locked:true,registeredAt:new Date().toISOString()};
     await upDb("parts",[...(db.parts||[]),np]);
     await deleteDraft(name);
-    setSaving(false);onDone();
+    setSaving(false);onDone(name.trim());
   };
   const upPre=(k,v)=>setDraft(d=>({...d,pre:{...d.pre,[k]:v}}));
   const upSemi=(i,v)=>setDraft(d=>{const s=[...(d.pre.semis||["","","",""])];s[i]=v;return{...d,pre:{...d.pre,semis:s}};});
