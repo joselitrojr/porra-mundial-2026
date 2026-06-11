@@ -409,9 +409,9 @@ function MundialAnnouncement({onClose}){
         <div style={{fontSize:15,fontWeight:900,color:"#1a5c2e",textTransform:"uppercase",letterSpacing:1,marginBottom:20}}>LO MEJOR AÚN ESTÁ POR VENIR.</div>
         <div style={{fontSize:18,color:"#555",marginBottom:24}}>🌐</div>
 
-        {/* Botón cerrar */}
-        <button onClick={onClose} style={{background:"#1a5c2e",border:"none",borderRadius:30,padding:"12px 40px",color:"#fff",fontWeight:700,fontSize:14,cursor:"pointer",letterSpacing:1,textTransform:"uppercase"}}>
-          ¡A POR TODAS! ⚽
+        {/* Botón cerrar arriba izq */}
+        <button onClick={onClose} style={{position:"absolute",top:16,left:16,background:"#1a5c2e",border:"none",borderRadius:20,padding:"8px 16px",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:6,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
+          ← Ir a la app
         </button>
       </div>
     </div>
