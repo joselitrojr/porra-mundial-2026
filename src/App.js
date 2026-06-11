@@ -350,6 +350,74 @@ function TablaGrupo({grupo,allM}){
   );
 }
 
+
+// ─── ANUNCIO 11 JUNIO ─────────────────────────────────────────────────────────
+function MundialAnnouncement({onClose}){
+  const past=[1998,2002,2006,2010,2014,2018,2022,2026];
+  const future=[2030,2034,2038,2042,2046,2050,2054,2058,2062,2066,2070,2074,2078];
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.7)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",backdropFilter:"blur(4px)"}}>
+      <div style={{background:"#f5f0e8",borderRadius:20,padding:"32px 24px",maxWidth:380,width:"100%",textAlign:"center",position:"relative",boxShadow:"0 20px 60px rgba(0,0,0,0.5)",maxHeight:"90vh",overflowY:"auto"}}>
+        {/* Trophy */}
+        <div style={{fontSize:40,marginBottom:8}}>🏆</div>
+        <div style={{width:40,height:2,background:"#c8a84b",margin:"0 auto 24px"}}/>
+
+        {/* Llevas X mundiales */}
+        <div style={{fontFamily:"'Georgia',serif",fontSize:20,fontWeight:900,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:2,lineHeight:1.2,marginBottom:6}}>LLEVAS</div>
+        <div style={{fontSize:64,fontWeight:900,color:"#1a5c2e",lineHeight:1,fontFamily:"'Georgia',serif",marginBottom:4}}>8</div>
+        <div style={{fontSize:22,fontWeight:900,color:"#1a5c2e",textTransform:"uppercase",letterSpacing:2,lineHeight:1.2,marginBottom:4}}>MUNDIALES</div>
+        <div style={{fontSize:18,fontWeight:900,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:2,marginBottom:20}}>A TUS ESPALDAS</div>
+
+        {/* Camisetas */}
+        <div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap",marginBottom:6}}>
+          {past.map((y,i)=>(
+            <div key={y} style={{textAlign:"center"}}>
+              <div style={{fontSize:i===0?22:18,filter:i===0?"none":"grayscale(0)"}}>{i===0?"⭐":"👕"}</div>
+              <div style={{fontSize:9,color:"#555",marginTop:2}}>{y}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Divider con balón */}
+        <div style={{display:"flex",alignItems:"center",gap:8,margin:"20px 0"}}>
+          <div style={{flex:1,height:1,background:"#c8a84b"}}/>
+          <div style={{fontSize:20}}>⚽</div>
+          <div style={{flex:1,height:1,background:"#c8a84b"}}/>
+        </div>
+
+        {/* Te quedan */}
+        <div style={{fontFamily:"'Georgia',serif",fontSize:16,fontWeight:700,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:2,marginBottom:4}}>TE QUEDAN</div>
+        <div style={{fontSize:72,fontWeight:900,color:"#1a5c2e",lineHeight:1,fontFamily:"'Georgia',serif",marginBottom:4}}>13</div>
+        <div style={{fontSize:18,fontWeight:900,color:"#1a5c2e",textTransform:"uppercase",letterSpacing:2,marginBottom:16}}>POR DELANTE</div>
+
+        {/* Años futuros */}
+        <div style={{fontSize:12,color:"#555",lineHeight:2,marginBottom:20}}>
+          {[future.slice(0,5),future.slice(5,10),future.slice(10)].map((row,i)=>(
+            <div key={i}>{row.map((y,j)=><span key={y}>{y}{j<row.length-1?" · ":""}</span>)}</div>
+          ))}
+        </div>
+
+        {/* Divider estrella */}
+        <div style={{display:"flex",alignItems:"center",gap:8,margin:"16px 0"}}>
+          <div style={{flex:1,height:1,background:"#c8a84b"}}/>
+          <div style={{fontSize:14,color:"#c8a84b"}}>★</div>
+          <div style={{flex:1,height:1,background:"#c8a84b"}}/>
+        </div>
+
+        {/* Mensaje final */}
+        <div style={{fontSize:15,fontWeight:900,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:1,lineHeight:1.6,marginBottom:4}}>DISFRUTA EL CAMINO.</div>
+        <div style={{fontSize:15,fontWeight:900,color:"#1a5c2e",textTransform:"uppercase",letterSpacing:1,marginBottom:20}}>LO MEJOR AÚN ESTÁ POR VENIR.</div>
+        <div style={{fontSize:18,color:"#555",marginBottom:24}}>🌐</div>
+
+        {/* Botón cerrar */}
+        <button onClick={onClose} style={{background:"#1a5c2e",border:"none",borderRadius:30,padding:"12px 40px",color:"#fff",fontWeight:700,fontSize:14,cursor:"pointer",letterSpacing:1,textTransform:"uppercase"}}>
+          ¡A POR TODAS! ⚽
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── APP ─────────────────────────────────────────────────────────────────────
 export default function App(){
   const[db,setDb]=useState({parts:[],extraM:[],results:{},rPre:null,rSpc:null,deadline:"",loaded:false});
@@ -362,6 +430,13 @@ export default function App(){
   const[shareP,setShareP]=useState(null);
   const[prevRanks,setPrevRanks]=useState({});
   const[myName,setMyName]=useState(()=>sessionStorage.getItem("myName")||null);
+  const[showAnnouncement,setShowAnnouncement]=useState(()=>{
+    // Show on June 11 2026, once per session
+    const today=new Date();
+    const isJune11=today.getFullYear()===2026&&today.getMonth()===5&&today.getDate()===11;
+    const seenToday=sessionStorage.getItem("ann_seen_"+today.toDateString());
+    return isJune11&&!seenToday;
+  });
 
   const load=useCallback(async()=>{
     const[parts,extraM,results,rPre,rSpc,deadline]=await Promise.all([
@@ -439,6 +514,7 @@ export default function App(){
 
   return(
     <div style={S.app}>
+      {showAnnouncement&&<MundialAnnouncement onClose={()=>{sessionStorage.setItem("ann_seen_"+new Date().toDateString(),"1");setShowAnnouncement(false);}}/>}
       {shareP&&<ShareCard participant={shareP} allM={allM} onClose={()=>setShareP(null)}/>}
       {/* HEADER */}
       <div style={S.hdr}>
