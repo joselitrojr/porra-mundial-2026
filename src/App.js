@@ -570,7 +570,7 @@ export default function App(){
                 </div>
               ))}
             </div>
-            {!allLocked&&scores.length>0&&<div style={{background:"rgba(37,99,235,0.1)",border:"1px solid rgba(37,99,235,0.25)",borderRadius:10,padding:"8px 14px",fontSize:12,color:"#93c5fd",marginBottom:10,textAlign:"center"}}>🔒 Pronósticos privados hasta que todos confirmen</div>}
+            {!allLocked&&scores.length>0&&scores.length>1&&<div style={{background:"rgba(37,99,235,0.1)",border:"1px solid rgba(37,99,235,0.25)",borderRadius:10,padding:"8px 14px",fontSize:12,color:"#93c5fd",marginBottom:10,textAlign:"center"}}>🔒 Pronósticos privados hasta que todos confirmen</div>}
             {scores.length===0?<div style={S.empty}><div style={{fontSize:36}}>📊</div><div style={{marginTop:8}}>El ranking aparecerá cuando haya participantes</div></div>:
               scores.map((p,i)=>{
                 const prevPos=prevRanks[p.id],curr=i+1,moved=prevPos&&prevPos!==curr?prevPos-curr:0;
@@ -594,8 +594,8 @@ export default function App(){
                       {i<3&&bote>0&&<div style={{fontSize:11,color:"#10b981"}}>+{Math.round(bote*[.6,.25,.15][i])}€</div>}
                     </div>
                     <div style={{display:"flex",flexDirection:"column",gap:4,marginLeft:4}}>
-                      {allLocked&&<button style={{...S.btnGhost,fontSize:11,padding:"3px 7px"}} onClick={()=>{setSelId(p.id);setView("compare");}}>📊</button>}
-                      {allLocked&&<button style={{...S.btnGhost,fontSize:11,padding:"3px 7px"}} onClick={()=>setShareP(p)}>📤</button>}
+                      <button style={{...S.btnGhost,fontSize:11,padding:"3px 7px"}} onClick={()=>{setSelId(p.id);setView("compare");}}>📊</button>
+                      <button style={{...S.btnGhost,fontSize:11,padding:"3px 7px"}} onClick={()=>setShareP(p)}>📤</button>
                     </div>
                   </div>
                 );
@@ -643,6 +643,7 @@ function PronosTab({db,scores,closed,allM,onRegister,onPredict,onShare}){
                 </div>
                 <div style={{display:"flex",gap:6,flexDirection:"column",alignItems:"flex-end"}}>
                   {!p.locked&&!closed&&<button style={S.btnGold} onClick={()=>onPredict(p.id)}>✏️ Editar</button>}
+                  {p.locked&&<button style={{...S.btnGhost,fontSize:11,padding:"4px 8px"}} onClick={()=>onPredict(p.id)}>👁 Ver pronósticos</button>}
                   {p.locked&&<button style={{...S.btnGhost,fontSize:11,padding:"4px 8px"}} onClick={()=>onShare(p)}>📤 Compartir</button>}
                 </div>
               </div>
@@ -1199,8 +1200,8 @@ function AdminView({db,upDb,allM,onBack}){
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 const S={
-  app:{minHeight:"100vh",background:"linear-gradient(160deg,#0a1628 0%,#0d1f0d 50%,#1a0a00 100%)",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#fff",maxWidth:600,margin:"0 auto"},
-  hdr:{background:"linear-gradient(180deg,#0a1628,#091220)",borderBottom:"2px solid transparent",borderImage:"linear-gradient(90deg,#c8102e,#e8b923,#c8102e) 1",padding:"12px 16px",boxShadow:"0 4px 20px rgba(0,0,0,0.5)"},
+  app:{minHeight:"100vh",background:"linear-gradient(160deg,#0a1628 0%,#0d1f0d 50%,#1a0a00 100%)",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#fff",maxWidth:600,margin:"0 auto",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"},
+  hdr:{background:"linear-gradient(180deg,#0a1628,#091220)",borderBottom:"2px solid transparent",borderImage:"linear-gradient(90deg,#c8102e,#e8b923,#c8102e) 1",padding:"12px 16px",paddingTop:"calc(12px + env(safe-area-inset-top))",boxShadow:"0 4px 20px rgba(0,0,0,0.5)"},
   hdrRow:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:6},
   t1:{fontSize:21,fontWeight:900,background:"linear-gradient(135deg,#e8b923,#fff5c0,#e8b923)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:2,lineHeight:1},
   t2:{fontSize:11,color:"#4a5568",letterSpacing:4,textTransform:"uppercase"},
@@ -1210,7 +1211,7 @@ const S={
   tabs:{display:"flex",background:"rgba(0,0,0,0.4)",borderBottom:"1px solid rgba(232,185,35,0.15)",backdropFilter:"blur(10px)"},
   tab:{flex:1,padding:"11px 1px",background:"transparent",border:"none",color:"#4a5568",cursor:"pointer",fontSize:10,fontWeight:700,borderBottom:"2px solid transparent",transition:"all .2s",letterSpacing:.3},
   tabA:{color:"#e8b923",borderBottomColor:"#e8b923",background:"rgba(232,185,35,0.06)"},
-  content:{padding:"14px 16px",paddingBottom:70},
+  content:{padding:"14px 16px",paddingBottom:"calc(70px + env(safe-area-inset-bottom))"},
   secNav:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",background:"rgba(0,0,0,0.5)",borderBottom:"1px solid rgba(255,255,255,0.06)"},
   snBtn:{padding:"10px 4px",background:"transparent",border:"none",color:"#4a5568",cursor:"pointer",borderBottom:"2px solid transparent",textAlign:"center",fontSize:11,fontWeight:700,transition:"all .2s"},
   snA:{color:"#e8b923",borderBottomColor:"#e8b923",background:"rgba(232,185,35,0.05)"},
