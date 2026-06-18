@@ -20,78 +20,78 @@ const GR = {
   L:["Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croacia 🇭🇷","Ghana 🇬🇭","Panamá 🇵🇦"],
 };
 const PM = [
-  {id:"a1",l:"México 🇲🇽",v:"Sudáfrica 🇿🇦",g:"A",d:"2026-06-11"},
-  {id:"a2",l:"Corea del Sur 🇰🇷",v:"Chequia 🇨🇿",g:"A",d:"2026-06-11"},
-  {id:"a3",l:"Chequia 🇨🇿",v:"Sudáfrica 🇿🇦",g:"A",d:"2026-06-18"},
-  {id:"a4",l:"México 🇲🇽",v:"Corea del Sur 🇰🇷",g:"A",d:"2026-06-18"},
-  {id:"a5",l:"Chequia 🇨🇿",v:"México 🇲🇽",g:"A",d:"2026-06-24"},
-  {id:"a6",l:"Sudáfrica 🇿🇦",v:"Corea del Sur 🇰🇷",g:"A",d:"2026-06-24"},
-  {id:"b1",l:"Canadá 🇨🇦",v:"Bosnia 🇧🇦",g:"B",d:"2026-06-12"},
-  {id:"b2",l:"Qatar 🇶🇦",v:"Suiza 🇨🇭",g:"B",d:"2026-06-13"},
-  {id:"b3",l:"Suiza 🇨🇭",v:"Bosnia 🇧🇦",g:"B",d:"2026-06-18"},
-  {id:"b4",l:"Canadá 🇨🇦",v:"Qatar 🇶🇦",g:"B",d:"2026-06-18"},
-  {id:"b5",l:"Suiza 🇨🇭",v:"Canadá 🇨🇦",g:"B",d:"2026-06-24"},
-  {id:"b6",l:"Bosnia 🇧🇦",v:"Qatar 🇶🇦",g:"B",d:"2026-06-24"},
-  {id:"c1",l:"Haití 🇭🇹",v:"Escocia 🏴󠁧󠁢󠁳󠁣󠁴󠁿",g:"C",d:"2026-06-13"},
-  {id:"c2",l:"Brasil 🇧🇷",v:"Marruecos 🇲🇦",g:"C",d:"2026-06-13"},
-  {id:"c3",l:"Brasil 🇧🇷",v:"Haití 🇭🇹",g:"C",d:"2026-06-19"},
-  {id:"c4",l:"Escocia 🏴󠁧󠁢󠁳󠁣󠁴󠁿",v:"Marruecos 🇲🇦",g:"C",d:"2026-06-19"},
-  {id:"c5",l:"Escocia 🏴󠁧󠁢󠁳󠁣󠁴󠁿",v:"Brasil 🇧🇷",g:"C",d:"2026-06-24"},
-  {id:"c6",l:"Marruecos 🇲🇦",v:"Haití 🇭🇹",g:"C",d:"2026-06-24"},
-  {id:"d1",l:"EE.UU. 🇺🇸",v:"Paraguay 🇵🇾",g:"D",d:"2026-06-12"},
-  {id:"d2",l:"Australia 🇦🇺",v:"Turquía 🇹🇷",g:"D",d:"2026-06-14"},
-  {id:"d3",l:"Turquía 🇹🇷",v:"Paraguay 🇵🇾",g:"D",d:"2026-06-19"},
-  {id:"d4",l:"EE.UU. 🇺🇸",v:"Australia 🇦🇺",g:"D",d:"2026-06-19"},
-  {id:"d5",l:"Turquía 🇹🇷",v:"EE.UU. 🇺🇸",g:"D",d:"2026-06-25"},
-  {id:"d6",l:"Paraguay 🇵🇾",v:"Australia 🇦🇺",g:"D",d:"2026-06-25"},
-  {id:"e1",l:"Costa de Marfil 🇨🇮",v:"Ecuador 🇪🇨",g:"E",d:"2026-06-14"},
-  {id:"e2",l:"Alemania 🇩🇪",v:"Curazao 🇨🇼",g:"E",d:"2026-06-14"},
-  {id:"e3",l:"Alemania 🇩🇪",v:"Costa de Marfil 🇨🇮",g:"E",d:"2026-06-20"},
-  {id:"e4",l:"Ecuador 🇪🇨",v:"Curazao 🇨🇼",g:"E",d:"2026-06-20"},
-  {id:"e5",l:"Curazao 🇨🇼",v:"Costa de Marfil 🇨🇮",g:"E",d:"2026-06-25"},
-  {id:"e6",l:"Ecuador 🇪🇨",v:"Alemania 🇩🇪",g:"E",d:"2026-06-25"},
-  {id:"f1",l:"Países Bajos 🇳🇱",v:"Japón 🇯🇵",g:"F",d:"2026-06-14"},
-  {id:"f2",l:"Suecia 🇸🇪",v:"Túnez 🇹🇳",g:"F",d:"2026-06-14"},
-  {id:"f3",l:"Países Bajos 🇳🇱",v:"Suecia 🇸🇪",g:"F",d:"2026-06-20"},
-  {id:"f4",l:"Túnez 🇹🇳",v:"Japón 🇯🇵",g:"F",d:"2026-06-21"},
-  {id:"f5",l:"Japón 🇯🇵",v:"Suecia 🇸🇪",g:"F",d:"2026-06-25"},
-  {id:"f6",l:"Túnez 🇹🇳",v:"Países Bajos 🇳🇱",g:"F",d:"2026-06-25"},
-  {id:"g1",l:"Irán 🇮🇷",v:"Nueva Zelanda 🇳🇿",g:"G",d:"2026-06-15"},
-  {id:"g2",l:"Bélgica 🇧🇪",v:"Egipto 🇪🇬",g:"G",d:"2026-06-15"},
-  {id:"g3",l:"Bélgica 🇧🇪",v:"Irán 🇮🇷",g:"G",d:"2026-06-21"},
-  {id:"g4",l:"Egipto 🇪🇬",v:"Nueva Zelanda 🇳🇿",g:"G",d:"2026-06-21"},
-  {id:"g5",l:"Irán 🇮🇷",v:"Egipto 🇪🇬",g:"G",d:"2026-06-26"},
-  {id:"g6",l:"Nueva Zelanda 🇳🇿",v:"Bélgica 🇧🇪",g:"G",d:"2026-06-26"},
-  {id:"h1",l:"Arabia Saudí 🇸🇦",v:"Uruguay 🇺🇾",g:"H",d:"2026-06-15"},
-  {id:"h2",l:"España 🇪🇸",v:"Cabo Verde 🇨🇻",g:"H",d:"2026-06-15"},
-  {id:"h3",l:"Uruguay 🇺🇾",v:"Cabo Verde 🇨🇻",g:"H",d:"2026-06-21"},
-  {id:"h4",l:"España 🇪🇸",v:"Arabia Saudí 🇸🇦",g:"H",d:"2026-06-21"},
-  {id:"h5",l:"España 🇪🇸",v:"Uruguay 🇺🇾",g:"H",d:"2026-06-26"},
-  {id:"h6",l:"Cabo Verde 🇨🇻",v:"Arabia Saudí 🇸🇦",g:"H",d:"2026-06-26"},
-  {id:"i1",l:"Francia 🇫🇷",v:"Senegal 🇸🇳",g:"I",d:"2026-06-16"},
-  {id:"i2",l:"Iraq 🇮🇶",v:"Noruega 🇳🇴",g:"I",d:"2026-06-16"},
-  {id:"i3",l:"Noruega 🇳🇴",v:"Senegal 🇸🇳",g:"I",d:"2026-06-22"},
-  {id:"i4",l:"Francia 🇫🇷",v:"Iraq 🇮🇶",g:"I",d:"2026-06-22"},
-  {id:"i5",l:"Francia 🇫🇷",v:"Noruega 🇳🇴",g:"I",d:"2026-06-26"},
-  {id:"i6",l:"Senegal 🇸🇳",v:"Iraq 🇮🇶",g:"I",d:"2026-06-26"},
-  {id:"j1",l:"Argentina 🇦🇷",v:"Argelia 🇩🇿",g:"J",d:"2026-06-16"},
-  {id:"j2",l:"Austria 🇦🇹",v:"Jordania 🇯🇴",g:"J",d:"2026-06-17"},
-  {id:"j3",l:"Argentina 🇦🇷",v:"Austria 🇦🇹",g:"J",d:"2026-06-22"},
-  {id:"j4",l:"Argelia 🇩🇿",v:"Jordania 🇯🇴",g:"J",d:"2026-06-22"},
-  {id:"j5",l:"Argentina 🇦🇷",v:"Jordania 🇯🇴",g:"J",d:"2026-06-26"},
-  {id:"j6",l:"Argelia 🇩🇿",v:"Austria 🇦🇹",g:"J",d:"2026-06-26"},
-  {id:"k1",l:"Portugal 🇵🇹",v:"RD Congo 🇨🇩",g:"K",d:"2026-06-17"},
-  {id:"k2",l:"Uzbekistán 🇺🇿",v:"Colombia 🇨🇴",g:"K",d:"2026-06-17"},
-  {id:"k3",l:"Portugal 🇵🇹",v:"Uzbekistán 🇺🇿",g:"K",d:"2026-06-23"},
-  {id:"k4",l:"Colombia 🇨🇴",v:"RD Congo 🇨🇩",g:"K",d:"2026-06-23"},
-  {id:"k5",l:"Colombia 🇨🇴",v:"Portugal 🇵🇹",g:"K",d:"2026-06-27"},
-  {id:"k6",l:"RD Congo 🇨🇩",v:"Uzbekistán 🇺🇿",g:"K",d:"2026-06-27"},
-  {id:"l1",l:"Ghana 🇬🇭",v:"Panamá 🇵🇦",g:"L",d:"2026-06-17"},
-  {id:"l2",l:"Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿",v:"Croacia 🇭🇷",g:"L",d:"2026-06-17"},
-  {id:"l3",l:"Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿",v:"Ghana 🇬🇭",g:"L",d:"2026-06-23"},
-  {id:"l4",l:"Croacia 🇭🇷",v:"Panamá 🇵🇦",g:"L",d:"2026-06-23"},
-  {id:"l5",l:"Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿",v:"Panamá 🇵🇦",g:"L",d:"2026-06-27"},
-  {id:"l6",l:"Croacia 🇭🇷",v:"Ghana 🇬🇭",g:"L",d:"2026-06-27"},
+  {id:"a1",l:"México 🇲🇽",v:"Sudáfrica 🇿🇦",g:"A",d:"2026-06-11",j:1},
+  {id:"a2",l:"Corea del Sur 🇰🇷",v:"Chequia 🇨🇿",g:"A",d:"2026-06-11",j:1},
+  {id:"a3",l:"Chequia 🇨🇿",v:"Sudáfrica 🇿🇦",g:"A",d:"2026-06-18",j:2},
+  {id:"a4",l:"México 🇲🇽",v:"Corea del Sur 🇰🇷",g:"A",d:"2026-06-18",j:2},
+  {id:"a5",l:"Chequia 🇨🇿",v:"México 🇲🇽",g:"A",d:"2026-06-24",j:3},
+  {id:"a6",l:"Sudáfrica 🇿🇦",v:"Corea del Sur 🇰🇷",g:"A",d:"2026-06-24",j:3},
+  {id:"b1",l:"Canadá 🇨🇦",v:"Bosnia 🇧🇦",g:"B",d:"2026-06-12",j:1},
+  {id:"b2",l:"Qatar 🇶🇦",v:"Suiza 🇨🇭",g:"B",d:"2026-06-13",j:1},
+  {id:"b3",l:"Suiza 🇨🇭",v:"Bosnia 🇧🇦",g:"B",d:"2026-06-18",j:2},
+  {id:"b4",l:"Canadá 🇨🇦",v:"Qatar 🇶🇦",g:"B",d:"2026-06-18",j:2},
+  {id:"b5",l:"Suiza 🇨🇭",v:"Canadá 🇨🇦",g:"B",d:"2026-06-24",j:3},
+  {id:"b6",l:"Bosnia 🇧🇦",v:"Qatar 🇶🇦",g:"B",d:"2026-06-24",j:3},
+  {id:"c1",l:"Haití 🇭🇹",v:"Escocia 🏴󠁧󠁢󠁳󠁣󠁴󠁿",g:"C",d:"2026-06-13",j:1},
+  {id:"c2",l:"Brasil 🇧🇷",v:"Marruecos 🇲🇦",g:"C",d:"2026-06-13",j:1},
+  {id:"c3",l:"Brasil 🇧🇷",v:"Haití 🇭🇹",g:"C",d:"2026-06-19",j:2},
+  {id:"c4",l:"Escocia 🏴󠁧󠁢󠁳󠁣󠁴󠁿",v:"Marruecos 🇲🇦",g:"C",d:"2026-06-19",j:2},
+  {id:"c5",l:"Escocia 🏴󠁧󠁢󠁳󠁣󠁴󠁿",v:"Brasil 🇧🇷",g:"C",d:"2026-06-24",j:3},
+  {id:"c6",l:"Marruecos 🇲🇦",v:"Haití 🇭🇹",g:"C",d:"2026-06-24",j:3},
+  {id:"d1",l:"EE.UU. 🇺🇸",v:"Paraguay 🇵🇾",g:"D",d:"2026-06-12",j:1},
+  {id:"d2",l:"Australia 🇦🇺",v:"Turquía 🇹🇷",g:"D",d:"2026-06-14",j:1},
+  {id:"d3",l:"Turquía 🇹🇷",v:"Paraguay 🇵🇾",g:"D",d:"2026-06-19",j:2},
+  {id:"d4",l:"EE.UU. 🇺🇸",v:"Australia 🇦🇺",g:"D",d:"2026-06-19",j:2},
+  {id:"d5",l:"Turquía 🇹🇷",v:"EE.UU. 🇺🇸",g:"D",d:"2026-06-25",j:3},
+  {id:"d6",l:"Paraguay 🇵🇾",v:"Australia 🇦🇺",g:"D",d:"2026-06-25",j:3},
+  {id:"e1",l:"Costa de Marfil 🇨🇮",v:"Ecuador 🇪🇨",g:"E",d:"2026-06-14",j:1},
+  {id:"e2",l:"Alemania 🇩🇪",v:"Curazao 🇨🇼",g:"E",d:"2026-06-14",j:1},
+  {id:"e3",l:"Alemania 🇩🇪",v:"Costa de Marfil 🇨🇮",g:"E",d:"2026-06-20",j:2},
+  {id:"e4",l:"Ecuador 🇪🇨",v:"Curazao 🇨🇼",g:"E",d:"2026-06-20",j:2},
+  {id:"e5",l:"Curazao 🇨🇼",v:"Costa de Marfil 🇨🇮",g:"E",d:"2026-06-25",j:3},
+  {id:"e6",l:"Ecuador 🇪🇨",v:"Alemania 🇩🇪",g:"E",d:"2026-06-25",j:3},
+  {id:"f1",l:"Países Bajos 🇳🇱",v:"Japón 🇯🇵",g:"F",d:"2026-06-14",j:1},
+  {id:"f2",l:"Suecia 🇸🇪",v:"Túnez 🇹🇳",g:"F",d:"2026-06-14",j:1},
+  {id:"f3",l:"Países Bajos 🇳🇱",v:"Suecia 🇸🇪",g:"F",d:"2026-06-20",j:2},
+  {id:"f4",l:"Túnez 🇹🇳",v:"Japón 🇯🇵",g:"F",d:"2026-06-21",j:2},
+  {id:"f5",l:"Japón 🇯🇵",v:"Suecia 🇸🇪",g:"F",d:"2026-06-25",j:3},
+  {id:"f6",l:"Túnez 🇹🇳",v:"Países Bajos 🇳🇱",g:"F",d:"2026-06-25",j:3},
+  {id:"g1",l:"Irán 🇮🇷",v:"Nueva Zelanda 🇳🇿",g:"G",d:"2026-06-15",j:1},
+  {id:"g2",l:"Bélgica 🇧🇪",v:"Egipto 🇪🇬",g:"G",d:"2026-06-15",j:1},
+  {id:"g3",l:"Bélgica 🇧🇪",v:"Irán 🇮🇷",g:"G",d:"2026-06-21",j:2},
+  {id:"g4",l:"Egipto 🇪🇬",v:"Nueva Zelanda 🇳🇿",g:"G",d:"2026-06-21",j:2},
+  {id:"g5",l:"Irán 🇮🇷",v:"Egipto 🇪🇬",g:"G",d:"2026-06-26",j:3},
+  {id:"g6",l:"Nueva Zelanda 🇳🇿",v:"Bélgica 🇧🇪",g:"G",d:"2026-06-26",j:3},
+  {id:"h1",l:"Arabia Saudí 🇸🇦",v:"Uruguay 🇺🇾",g:"H",d:"2026-06-15",j:1},
+  {id:"h2",l:"España 🇪🇸",v:"Cabo Verde 🇨🇻",g:"H",d:"2026-06-15",j:1},
+  {id:"h3",l:"Uruguay 🇺🇾",v:"Cabo Verde 🇨🇻",g:"H",d:"2026-06-21",j:2},
+  {id:"h4",l:"España 🇪🇸",v:"Arabia Saudí 🇸🇦",g:"H",d:"2026-06-21",j:2},
+  {id:"h5",l:"España 🇪🇸",v:"Uruguay 🇺🇾",g:"H",d:"2026-06-26",j:3},
+  {id:"h6",l:"Cabo Verde 🇨🇻",v:"Arabia Saudí 🇸🇦",g:"H",d:"2026-06-26",j:3},
+  {id:"i1",l:"Francia 🇫🇷",v:"Senegal 🇸🇳",g:"I",d:"2026-06-16",j:1},
+  {id:"i2",l:"Iraq 🇮🇶",v:"Noruega 🇳🇴",g:"I",d:"2026-06-16",j:1},
+  {id:"i3",l:"Noruega 🇳🇴",v:"Senegal 🇸🇳",g:"I",d:"2026-06-22",j:2},
+  {id:"i4",l:"Francia 🇫🇷",v:"Iraq 🇮🇶",g:"I",d:"2026-06-22",j:2},
+  {id:"i5",l:"Francia 🇫🇷",v:"Noruega 🇳🇴",g:"I",d:"2026-06-26",j:3},
+  {id:"i6",l:"Senegal 🇸🇳",v:"Iraq 🇮🇶",g:"I",d:"2026-06-26",j:3},
+  {id:"j1",l:"Argentina 🇦🇷",v:"Argelia 🇩🇿",g:"J",d:"2026-06-16",j:1},
+  {id:"j2",l:"Austria 🇦🇹",v:"Jordania 🇯🇴",g:"J",d:"2026-06-17",j:1},
+  {id:"j3",l:"Argentina 🇦🇷",v:"Austria 🇦🇹",g:"J",d:"2026-06-22",j:2},
+  {id:"j4",l:"Argelia 🇩🇿",v:"Jordania 🇯🇴",g:"J",d:"2026-06-22",j:2},
+  {id:"j5",l:"Argentina 🇦🇷",v:"Jordania 🇯🇴",g:"J",d:"2026-06-26",j:3},
+  {id:"j6",l:"Argelia 🇩🇿",v:"Austria 🇦🇹",g:"J",d:"2026-06-26",j:3},
+  {id:"k1",l:"Portugal 🇵🇹",v:"RD Congo 🇨🇩",g:"K",d:"2026-06-17",j:1},
+  {id:"k2",l:"Uzbekistán 🇺🇿",v:"Colombia 🇨🇴",g:"K",d:"2026-06-17",j:1},
+  {id:"k3",l:"Portugal 🇵🇹",v:"Uzbekistán 🇺🇿",g:"K",d:"2026-06-23",j:2},
+  {id:"k4",l:"Colombia 🇨🇴",v:"RD Congo 🇨🇩",g:"K",d:"2026-06-23",j:2},
+  {id:"k5",l:"Colombia 🇨🇴",v:"Portugal 🇵🇹",g:"K",d:"2026-06-27",j:3},
+  {id:"k6",l:"RD Congo 🇨🇩",v:"Uzbekistán 🇺🇿",g:"K",d:"2026-06-27",j:3},
+  {id:"l1",l:"Ghana 🇬🇭",v:"Panamá 🇵🇦",g:"L",d:"2026-06-17",j:1},
+  {id:"l2",l:"Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿",v:"Croacia 🇭🇷",g:"L",d:"2026-06-17",j:1},
+  {id:"l3",l:"Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿",v:"Ghana 🇬🇭",g:"L",d:"2026-06-23",j:2},
+  {id:"l4",l:"Croacia 🇭🇷",v:"Panamá 🇵🇦",g:"L",d:"2026-06-23",j:2},
+  {id:"l5",l:"Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿",v:"Panamá 🇵🇦",g:"L",d:"2026-06-27",j:3},
+  {id:"l6",l:"Croacia 🇭🇷",v:"Ghana 🇬🇭",g:"L",d:"2026-06-27",j:3},
 ];
 
 const MULT={grupos:1,octavos:1.5,cuartos:2,semifinales:3,final:5};
@@ -419,6 +419,230 @@ function MundialAnnouncement({onClose}){
 }
 
 // ─── APP ─────────────────────────────────────────────────────────────────────
+
+// ─── ESTADÍSTICAS DE JORNADA ──────────────────────────────────────────────────
+function jornadaCompleta(j, allM){
+  const matchesJ = allM.filter(m => m.j === j && m.ph === "grupos");
+  if (matchesJ.length === 0) return false;
+  return matchesJ.every(m => m.result);
+}
+
+function calcStatsJornada(j, allM, parts){
+  const matchesJ = allM.filter(m => m.j === j && m.ph === "grupos" && m.result);
+
+  const ptsJornada = parts.map(p => {
+    let pts = 0;
+    matchesJ.forEach(m => { pts += mPts((p.mp||{})[m.id], m.result, "grupos", m.id === p.fetiche); });
+    return { name: p.name, pts: Math.round(pts*10)/10, fetiche: p.fetiche, fetM: matchesJ.find(m=>m.id===p.fetiche) };
+  }).sort((a,b) => b.pts - a.pts);
+
+  let masAcertado = null, masFallado = null, mayorSorpresa = null, mayorGoleada = null;
+  let maxAciertos = -1, minAciertos = Infinity, maxGoles = -1;
+
+  matchesJ.forEach(m => {
+    let aciertosExactos = 0, aciertosGanador = 0, totalConPred = 0;
+    parts.forEach(p => {
+      const pred = (p.mp||{})[m.id];
+      if (!pred || pred.l === "" || pred.v === "") return;
+      totalConPred++;
+      const pl = +pred.l, pv = +pred.v, rl = +m.result.l, rv = +m.result.v;
+      if (pl === rl && pv === rv) aciertosExactos++;
+      const rw = rl > rv ? "L" : rv > rl ? "V" : "E";
+      const pw = pl > pv ? "L" : pv > pl ? "V" : "E";
+      if (rw === pw) aciertosGanador++;
+    });
+    if (totalConPred === 0) return;
+    if (aciertosExactos > maxAciertos) { maxAciertos = aciertosExactos; masAcertado = { ...m, aciertos: aciertosExactos, total: totalConPred }; }
+    if (aciertosGanador < minAciertos) { minAciertos = aciertosGanador; masFallado = { ...m, aciertos: aciertosGanador, total: totalConPred }; }
+    const goles = (+m.result.l) + (+m.result.v);
+    if (goles > maxGoles) { maxGoles = goles; mayorGoleada = m; }
+    const pctGanador = aciertosGanador / totalConPred;
+    if (!mayorSorpresa || pctGanador < mayorSorpresa.pct) {
+      mayorSorpresa = { ...m, pct: pctGanador, aciertos: aciertosGanador, total: totalConPred };
+    }
+  });
+
+  return { ptsJornada, masAcertado, masFallado, mayorGoleada, mayorSorpresa, matchesJ };
+}
+
+const PULLAS = [
+  "menudo arranque... a remontar desde ya 😅",
+  "última posición de la jornada, pero el Mundial es largo 🫠",
+  "ni de coña con esa jornada... a recuperar 🔥",
+  "esto pinta a temporada larga para ti 😬",
+];
+const PIROPOS = [
+  "arrasando desde el primer minuto 🔥",
+  "menudo arranque, vas con todo 🚀",
+  "el resto ya puede empezar a preocuparse 😏",
+  "liderato desde la J1, qué nivel 👑",
+];
+
+function StatsJornadaView({jornada, allM, parts, onClose}){
+  const stats = calcStatsJornada(jornada, allM, parts);
+  if (!stats.ptsJornada.length) return null;
+  const lider = stats.ptsJornada[0];
+  const ultimo = stats.ptsJornada[stats.ptsJornada.length - 1];
+  const piropo = PIROPOS[jornada % PIROPOS.length];
+  const pulla = PULLAS[jornada % PULLAS.length];
+
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:9998,background:"rgba(0,0,0,0.85)",display:"flex",flexDirection:"column",alignItems:"center",overflowY:"auto",padding:"16px"}}>
+      <div style={{width:"100%",maxWidth:480,background:"linear-gradient(160deg,#0a1628,#0d1f0d 60%,#1a0a00)",borderRadius:18,overflow:"hidden",border:"1px solid rgba(232,185,35,0.2)"}}>
+        <button onClick={onClose} style={{position:"sticky",top:0,zIndex:10,background:"rgba(0,0,0,0.6)",border:"none",borderRadius:0,padding:"10px 16px",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",width:"100%",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
+          ← Volver a la app
+        </button>
+
+        <div style={{padding:"20px 18px"}}>
+          <div style={{textAlign:"center",marginBottom:20}}>
+            <div style={{fontSize:36}}>📊</div>
+            <div style={{fontSize:22,fontWeight:900,background:"linear-gradient(135deg,#e8b923,#fff5c0)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>RESUMEN JORNADA {jornada}</div>
+            <div style={{fontSize:12,color:"#4a5568",marginTop:4}}>Fase de grupos · {stats.matchesJ.length} partidos jugados</div>
+          </div>
+
+          <div style={{background:"linear-gradient(135deg,rgba(232,185,35,0.15),rgba(232,185,35,0.05))",border:"1px solid rgba(232,185,35,0.3)",borderRadius:14,padding:"16px",marginBottom:12}}>
+            <div style={{fontSize:10,color:"#e8b923",letterSpacing:2,fontWeight:700,textTransform:"uppercase",marginBottom:6}}>🥇 Rey de la jornada</div>
+            <div style={{fontWeight:900,fontSize:20,color:"#fff"}}>{lider.name}</div>
+            <div style={{fontSize:13,color:"#fff5c0",marginTop:2}}>{lider.pts} pts en esta jornada · {piropo}</div>
+          </div>
+
+          {ultimo.name !== lider.name && (
+            <div style={{background:"linear-gradient(135deg,rgba(220,38,38,0.15),rgba(220,38,38,0.05))",border:"1px dashed rgba(220,38,38,0.3)",borderRadius:14,padding:"16px",marginBottom:16}}>
+              <div style={{fontSize:10,color:"#fca5a5",letterSpacing:2,fontWeight:700,textTransform:"uppercase",marginBottom:6}}>😅 Farolillo de la jornada</div>
+              <div style={{fontWeight:900,fontSize:18,color:"#fff"}}>{ultimo.name}</div>
+              <div style={{fontSize:13,color:"#fecaca",marginTop:2}}>{ultimo.pts} pts en esta jornada · {pulla}</div>
+            </div>
+          )}
+
+          {stats.masAcertado && (
+            <div style={{background:"rgba(0,0,0,0.3)",borderLeft:"3px solid #10b981",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
+              <div style={{fontSize:10,color:"#10b981",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>🎯 Partido más acertado</div>
+              <div style={{fontSize:14,fontWeight:700,color:"#fff"}}>{stats.masAcertado.l} {stats.masAcertado.result.l}-{stats.masAcertado.result.v} {stats.masAcertado.v}</div>
+              <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>{stats.masAcertado.aciertos}/{stats.masAcertado.total} acertaron el resultado exacto</div>
+            </div>
+          )}
+
+          {stats.mayorSorpresa && stats.mayorSorpresa.pct < 0.4 && (
+            <div style={{background:"rgba(0,0,0,0.3)",borderLeft:"3px solid #f472b6",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
+              <div style={{fontSize:10,color:"#f472b6",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>😱 Sorpresa de la jornada</div>
+              <div style={{fontSize:14,fontWeight:700,color:"#fff"}}>{stats.mayorSorpresa.l} {stats.mayorSorpresa.result.l}-{stats.mayorSorpresa.result.v} {stats.mayorSorpresa.v}</div>
+              <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Solo {stats.mayorSorpresa.aciertos}/{stats.mayorSorpresa.total} acertaron quién ganaba</div>
+            </div>
+          )}
+
+          {stats.mayorGoleada && (
+            <div style={{background:"rgba(0,0,0,0.3)",borderLeft:"3px solid #fb923c",borderRadius:10,padding:"12px 14px",marginBottom:16}}>
+              <div style={{fontSize:10,color:"#fb923c",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>🔥 Partido con más goles</div>
+              <div style={{fontSize:14,fontWeight:700,color:"#fff"}}>{stats.mayorGoleada.l} {stats.mayorGoleada.result.l}-{stats.mayorGoleada.result.v} {stats.mayorGoleada.v}</div>
+            </div>
+          )}
+
+          <div style={{fontSize:11,color:"#4a5568",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>📋 Puntos de todos en la J{jornada}</div>
+          {stats.ptsJornada.map((p, i) => (
+            <div key={p.name} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:"rgba(0,0,0,0.25)",borderRadius:8,marginBottom:4}}>
+              <div style={{width:22,fontSize:11,color:"#4a5568",fontWeight:700}}>{i+1}</div>
+              <div style={{flex:1,fontSize:13,color:"#e2e8f0"}}>{p.name}</div>
+              <div style={{fontWeight:800,fontSize:14,color:i===0?"#e8b923":"#10b981"}}>{p.pts} pts</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PESTAÑA FIJA DE JORNADAS ─────────────────────────────────────────────────
+function JornadasTab({jornadasCompletas, allM, parts}){
+  const[sel,setSel]=useState(jornadasCompletas[jornadasCompletas.length-1]);
+  useEffect(()=>{
+    if(!jornadasCompletas.includes(sel)&&jornadasCompletas.length>0){
+      setSel(jornadasCompletas[jornadasCompletas.length-1]);
+    }
+  },[jornadasCompletas,sel]);
+
+  if(jornadasCompletas.length===0)return(
+    <div style={S.content}>
+      <div style={S.empty}>
+        <div style={{fontSize:36}}>📈</div>
+        <div style={{marginTop:8}}>Aún no hay jornadas completas</div>
+        <div style={{fontSize:12,color:"#1a1a1a",marginTop:4}}>Aparecerán aquí en cuanto termine la J1</div>
+      </div>
+    </div>
+  );
+
+  return(
+    <div>
+      <div style={{display:"flex",gap:6,padding:"12px 16px",background:"rgba(0,0,0,0.3)",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+        {jornadasCompletas.map(j=>(
+          <button key={j} style={{...S.chip,...(sel===j?S.chipA:{}),flex:1,textAlign:"center"}} onClick={()=>setSel(j)}>Jornada {j}</button>
+        ))}
+      </div>
+      <div style={{padding:"16px"}}>
+        <StatsJornadaInline jornada={sel} allM={allM} parts={parts}/>
+      </div>
+    </div>
+  );
+}
+
+// Versión "inline" de las estadísticas (sin overlay, para vivir dentro de la pestaña)
+function StatsJornadaInline({jornada, allM, parts}){
+  const stats=calcStatsJornada(jornada,allM,parts);
+  if(!stats.ptsJornada.length)return <div style={S.empty}>Sin datos para esta jornada</div>;
+  const lider=stats.ptsJornada[0];
+  const ultimo=stats.ptsJornada[stats.ptsJornada.length-1];
+  const piropo=PIROPOS[jornada%PIROPOS.length];
+  const pulla=PULLAS[jornada%PULLAS.length];
+  return(
+    <div>
+      <div style={{background:"linear-gradient(135deg,rgba(232,185,35,0.15),rgba(232,185,35,0.05))",border:"1px solid rgba(232,185,35,0.3)",borderRadius:14,padding:"16px",marginBottom:12}}>
+        <div style={{fontSize:10,color:"#e8b923",letterSpacing:2,fontWeight:700,textTransform:"uppercase",marginBottom:6}}>🥇 Rey de la jornada</div>
+        <div style={{fontWeight:900,fontSize:20,color:"#fff"}}>{lider.name}</div>
+        <div style={{fontSize:13,color:"#fff5c0",marginTop:2}}>{lider.pts} pts en esta jornada · {piropo}</div>
+      </div>
+
+      {ultimo.name!==lider.name&&(
+        <div style={{background:"linear-gradient(135deg,rgba(220,38,38,0.15),rgba(220,38,38,0.05))",border:"1px dashed rgba(220,38,38,0.3)",borderRadius:14,padding:"16px",marginBottom:16}}>
+          <div style={{fontSize:10,color:"#fca5a5",letterSpacing:2,fontWeight:700,textTransform:"uppercase",marginBottom:6}}>😅 Farolillo de la jornada</div>
+          <div style={{fontWeight:900,fontSize:18,color:"#fff"}}>{ultimo.name}</div>
+          <div style={{fontSize:13,color:"#fecaca",marginTop:2}}>{ultimo.pts} pts en esta jornada · {pulla}</div>
+        </div>
+      )}
+
+      {stats.masAcertado&&(
+        <div style={{background:"rgba(0,0,0,0.3)",borderLeft:"3px solid #10b981",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
+          <div style={{fontSize:10,color:"#10b981",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>🎯 Partido más acertado</div>
+          <div style={{fontSize:14,fontWeight:700,color:"#fff"}}>{stats.masAcertado.l} {stats.masAcertado.result.l}-{stats.masAcertado.result.v} {stats.masAcertado.v}</div>
+          <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>{stats.masAcertado.aciertos}/{stats.masAcertado.total} acertaron el resultado exacto</div>
+        </div>
+      )}
+
+      {stats.mayorSorpresa&&stats.mayorSorpresa.pct<0.4&&(
+        <div style={{background:"rgba(0,0,0,0.3)",borderLeft:"3px solid #f472b6",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
+          <div style={{fontSize:10,color:"#f472b6",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>😱 Sorpresa de la jornada</div>
+          <div style={{fontSize:14,fontWeight:700,color:"#fff"}}>{stats.mayorSorpresa.l} {stats.mayorSorpresa.result.l}-{stats.mayorSorpresa.result.v} {stats.mayorSorpresa.v}</div>
+          <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Solo {stats.mayorSorpresa.aciertos}/{stats.mayorSorpresa.total} acertaron quién ganaba</div>
+        </div>
+      )}
+
+      {stats.mayorGoleada&&(
+        <div style={{background:"rgba(0,0,0,0.3)",borderLeft:"3px solid #fb923c",borderRadius:10,padding:"12px 14px",marginBottom:16}}>
+          <div style={{fontSize:10,color:"#fb923c",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>🔥 Partido con más goles</div>
+          <div style={{fontSize:14,fontWeight:700,color:"#fff"}}>{stats.mayorGoleada.l} {stats.mayorGoleada.result.l}-{stats.mayorGoleada.result.v} {stats.mayorGoleada.v}</div>
+        </div>
+      )}
+
+      <div style={{fontSize:11,color:"#4a5568",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>📋 Puntos de todos en la J{jornada}</div>
+      {stats.ptsJornada.map((p,i)=>(
+        <div key={p.name} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:"rgba(0,0,0,0.25)",borderRadius:8,marginBottom:4}}>
+          <div style={{width:22,fontSize:11,color:"#4a5568",fontWeight:700}}>{i+1}</div>
+          <div style={{flex:1,fontSize:13,color:"#e2e8f0"}}>{p.name}</div>
+          <div style={{fontWeight:800,fontSize:14,color:i===0?"#e8b923":"#10b981"}}>{p.pts} pts</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function App(){
   const[db,setDb]=useState({parts:[],extraM:[],results:{},rPre:null,rSpc:null,deadline:"",loaded:false});
   const[view,setView]=useState("welcome");
@@ -469,6 +693,7 @@ export default function App(){
   const scores=(db.parts||[]).map(p=>({...p,tot:totPts(p,allM,db.rPre,db.rSpc)})).sort((a,b)=>b.tot-a.tot);
   const bote=(db.parts||[]).length*CUOTA;
   const allLocked=(db.parts||[]).length>0&&(db.parts||[]).every(x=>x.locked);
+  const jornadasCompletas=[1,2,3].filter(j=>jornadaCompleta(j,allM));
 
   if(!db.loaded)return(
     <div style={{...S.app,display:"flex",alignItems:"center",justifyContent:"center",height:"100vh"}}>
@@ -551,12 +776,12 @@ export default function App(){
 
       {/* TABS */}
       <div style={S.tabs}>
-        {[["ranking","📊 Ranking"],["pronos","🎯 Pronos"],["partidos","⚽ Partidos"],["chat","💬 Chat"],["reglas","📋 Reglas"]].map(([id,l])=>(
+        {[["ranking","📊 Ranking"],["pronos","🎯 Pronos"],["partidos","⚽ Partidos"],...(jornadasCompletas.length>0?[["jornadas","📈 Jornadas"]]:[]),["chat","💬 Chat"],["reglas","📋 Reglas"]].map(([id,l])=>(
           <button key={id} style={{...S.tab,...(tab===id?S.tabA:{})}} onClick={()=>setTab(id)}>{l}</button>
         ))}
       </div>
 
-      {tab!=="chat"&&<div style={S.content}>
+      {tab!=="chat"&&tab!=="jornadas"&&<div style={S.content}>
         {tab==="ranking"&&(
           <div>
             <CountdownWidget/>
@@ -610,6 +835,7 @@ export default function App(){
         {tab==="partidos"&&<PartidosTab allM={allM}/>}
         {tab==="reglas"&&<ReglasTab/>}
       </div>}
+      {tab==="jornadas"&&<JornadasTab jornadasCompletas={jornadasCompletas} allM={allM} parts={db.parts||[]}/>}
       {tab==="chat"&&<ChatTab myName={myName} parts={db.parts||[]}/>}
     </div>
   );
