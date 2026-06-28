@@ -648,6 +648,156 @@ function StatsJornadaInline({jornada, allM, parts}){
   );
 }
 
+
+
+// ─── ELIMINATORIA TAB ─────────────────────────────────────────────────────────
+function EliminatoriaTab({db, upDb, allM}){
+  const[selName,setSelName]=useState("");
+  const[editing,setEditing]=useState(false);
+  const[saving,setSaving]=useState(false);
+  const[saved,setSaved]=useState(false);
+  const elimM=allM.filter(m=>m.ph!=="grupos");
+  const parts=db.parts||[];
+  const p=parts.find(x=>x.name===selName);
+
+  const upM=async(id,side,v)=>{
+    if(!p)return;
+    const updated=parts.map(x=>x.id!==p.id?x:{...x,mp:{...(x.mp||{}),[id]:{...((x.mp||{})[id]||{}),[side]:v}}});
+    upDb("parts",updated);
+  };
+
+  const setPenalti=async(id,ph)=>{
+    if(!p)return;
+    const current=p.penaltis||{};
+    const newP={};
+    Object.entries(current).forEach(([k,v])=>{if(v!==ph)newP[k]=v;});
+    if(current[id]){await upDb("parts",parts.map(x=>x.id!==p.id?x:{...x,penaltis:newP}));return;}
+    newP[id]=ph;
+    await upDb("parts",parts.map(x=>x.id!==p.id?x:{...x,penaltis:newP}));
+  };
+
+  const save=async()=>{
+    setSaving(true);
+    await new Promise(r=>setTimeout(r,500));
+    setSaving(false);setSaved(true);
+    setTimeout(()=>setSaved(false),2500);
+  };
+
+  const fases=["dieciseisavos","octavos","cuartos","semifinales","final"];
+  const porFase=fases.map(ph=>({ph,matches:elimM.filter(m=>m.ph===ph)})).filter(x=>x.matches.length>0);
+
+  if(elimM.length===0)return(
+    <div style={S.content}>
+      <div style={S.empty}>
+        <div style={{fontSize:36}}>🏟</div>
+        <div style={{marginTop:8}}>Los partidos de eliminatoria aparecerán aquí</div>
+        <div style={{fontSize:12,color:"#1a1a1a",marginTop:4}}>El admin los añade desde Panel → ➕ Partidos</div>
+      </div>
+    </div>
+  );
+
+  // Landing — pick name
+  if(!editing)return(
+    <div style={S.content}>
+      <div style={{textAlign:"center",marginBottom:24,paddingTop:16}}>
+        <div style={{fontSize:40,marginBottom:8}}>🏟</div>
+        <div style={{fontSize:20,fontWeight:900,background:"linear-gradient(135deg,#e8b923,#fff5c0)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>ELIMINATORIAS</div>
+        <div style={{fontSize:12,color:"#4a5568",marginTop:4}}>{elimM.length} partido{elimM.length!==1?"s":""} · Pronostica y marca penaltis</div>
+      </div>
+      <div style={{background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"18px",marginBottom:16}}>
+        <div style={{fontSize:13,color:"#94a3b8",marginBottom:12,fontWeight:600}}>¿Quién eres?</div>
+        <select style={{...S.sel,marginBottom:14}} value={selName} onChange={e=>setSelName(e.target.value)}>
+          <option value="">— Selecciona tu nombre —</option>
+          {parts.map(x=><option key={x.id} value={x.name}>{x.name}</option>)}
+        </select>
+        <button
+          disabled={!selName}
+          onClick={()=>setEditing(true)}
+          style={{...S.btnGold,width:"100%",padding:"13px",fontSize:14,borderRadius:12,opacity:selName?1:.4,cursor:selName?"pointer":"not-allowed"}}>
+          ✏️ Meter mis pronósticos →
+        </button>
+      </div>
+      <div style={{background:"rgba(99,102,241,0.08)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:10,padding:"10px 14px",fontSize:12,color:"#818cf8"}}>
+        🥅 Puedes marcar <strong>un partido por ronda</strong> que crees que irá a penaltis → <strong>+3 pts</strong> si aciertas
+      </div>
+    </div>
+  );
+
+  // Editing view
+  return(
+    <div>
+      <div style={{padding:"10px 16px",background:"rgba(0,0,0,0.5)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div>
+          <div style={{fontSize:11,color:"#4a5568"}}>Pronósticos de</div>
+          <div style={{fontWeight:800,fontSize:15,color:"#e8b923"}}>{selName}</div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={save} style={{...S.btnGold,padding:"8px 16px",...(saved?{background:"linear-gradient(135deg,#065f46,#047857)"}:{})}}>
+            {saving?"…":saved?"✅ Guardado":"💾 Guardar"}
+          </button>
+          <button onClick={()=>{setEditing(false);}} style={{...S.btnGhost,padding:"8px 12px"}}>✕</button>
+        </div>
+      </div>
+
+      <div style={S.content}>
+        <div style={{background:"rgba(99,102,241,0.08)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:10,padding:"8px 12px",fontSize:12,color:"#818cf8",marginBottom:16}}>
+          🥅 Un partido por ronda que crees que va a penaltis → +3 pts si aciertas
+        </div>
+
+        {porFase.map(({ph,matches})=>{
+          const penaltisRonda=p&&Object.entries(p.penaltis||{}).find(([k,v])=>v===ph&&matches.find(m=>m.id===k));
+          return(
+            <div key={ph} style={{marginBottom:20}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <span style={{fontSize:12,color:"#60a5fa",fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>{PHL[ph]}</span>
+                <span style={{fontSize:10,color:"#1e3a5f"}}>×{MULT[ph]}</span>
+                {penaltisRonda&&<span style={{fontSize:10,background:"rgba(99,102,241,0.2)",color:"#818cf8",border:"1px solid rgba(99,102,241,0.3)",borderRadius:8,padding:"1px 7px"}}>🥅 marcado</span>}
+              </div>
+              {matches.map(m=>{
+                const pred=(p&&(p.mp||{})[m.id])||{};
+                const res=m.result;
+                const pts=res&&pred.l!==""&&pred.v!==""?mPts(pred,res,m.ph,m.id===(p&&p.fetiche)):null;
+                const isPen=p&&!!(p.penaltis||{})[m.id];
+                return(
+                  <div key={m.id} style={{...S.mCard,marginBottom:8,borderColor:isPen?"rgba(99,102,241,0.5)":res?"rgba(16,185,129,0.25)":"rgba(255,255,255,0.06)"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <span style={{fontSize:11,color:"#2d3748"}}>{fd(m.date||"")}</span>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        {m.fueAPenaltis&&isPen&&<span style={{fontSize:10,color:"#818cf8",fontWeight:700}}>+3pts ✓</span>}
+                        {m.fueAPenaltis&&!isPen&&<span style={{fontSize:10,color:"#2d3748"}}>🥅 fue a penaltis</span>}
+                        {!res&&<button onClick={()=>setPenalti(m.id,m.ph)} style={{background:isPen?"rgba(99,102,241,0.25)":"rgba(0,0,0,0.3)",border:"1px solid "+(isPen?"#818cf8":"rgba(255,255,255,0.1)"),borderRadius:8,padding:"3px 10px",color:isPen?"#818cf8":"#4a5568",fontSize:12,cursor:"pointer",fontWeight:isPen?700:400}}>
+                          {isPen?"🥅 Penaltis ✓":"🥅 ¿Penaltis?"}
+                        </button>}
+                      </div>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 44px 14px 44px 1fr",alignItems:"center",gap:4}}>
+                      <div style={{textAlign:"right",fontWeight:600,color:"#e2e8f0",fontSize:12,lineHeight:1.3}}>{m.l}</div>
+                      <input type="number" min={0} max={20} value={pred.l||""} onChange={e=>upM(m.id,"l",e.target.value)} disabled={!!res} style={{...S.scoreI,opacity:res?.5:1}} placeholder="?"/>
+                      <span style={{textAlign:"center",color:"rgba(255,255,255,0.1)",fontWeight:700}}>–</span>
+                      <input type="number" min={0} max={20} value={pred.v||""} onChange={e=>upM(m.id,"v",e.target.value)} disabled={!!res} style={{...S.scoreI,opacity:res?.5:1}} placeholder="?"/>
+                      <div style={{fontWeight:600,color:"#e2e8f0",fontSize:12,lineHeight:1.3}}>{m.v}</div>
+                    </div>
+                    {res&&<div style={{textAlign:"center",fontSize:11,marginTop:6}}>
+                      <span style={{color:"#10b981"}}>Real: {res.l}–{res.v}</span>
+                      {pts!==null&&<span style={{color:"#10b981",marginLeft:8,fontWeight:700}}>+{pts}pts</span>}
+                      {m.fueAPenaltis&&<span style={{color:"#818cf8",marginLeft:6}}>🥅{isPen?" +3pts":" (no apostaste)"}</span>}
+                    </div>}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+
+        <button onClick={save} style={{...S.btnGold,width:"100%",padding:"13px",fontSize:14,borderRadius:12,marginTop:4,...(saved?{background:"linear-gradient(135deg,#065f46,#047857)"}:{})}}>
+          {saving?"Guardando…":saved?"✅ ¡Guardado!":"💾 Guardar pronósticos"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 export default function App(){
   const[db,setDb]=useState({parts:[],extraM:[],results:{},rPre:null,rSpc:null,deadline:"",loaded:false});
   const[view,setView]=useState("welcome");
@@ -781,12 +931,12 @@ export default function App(){
 
       {/* TABS */}
       <div style={S.tabs}>
-        {[["ranking","📊 Ranking"],["pronos","🎯 Pronos"],["partidos","⚽ Partidos"],...(jornadasCompletas.length>0?[["jornadas","📈 Jornadas"]]:[]),["chat","💬 Chat"],["reglas","📋 Reglas"]].map(([id,l])=>(
+        {[["ranking","📊 Ranking"],["pronos","🎯 Pronos"],["partidos","⚽ Partidos"],...(allM.some(m=>m.ph!=="grupos")?[["elim","🏟 Elim."]]:[]),...(jornadasCompletas.length>0?[["jornadas","📈 Jornadas"]]:[]),["chat","💬 Chat"],["reglas","📋 Reglas"]].map(([id,l])=>(
           <button key={id} style={{...S.tab,...(tab===id?S.tabA:{})}} onClick={()=>setTab(id)}>{l}</button>
         ))}
       </div>
 
-      {tab!=="chat"&&tab!=="jornadas"&&<div style={S.content}>
+      {tab!=="chat"&&tab!=="jornadas"&&tab!=="elim"&&<div style={S.content}>
         {tab==="ranking"&&(
           <div>
             <CountdownWidget/>
@@ -837,6 +987,7 @@ export default function App(){
           </div>
         )}
         {tab==="pronos"&&<PronosTab db={db} scores={scores} closed={closed} allM={allM} onRegister={()=>setView("register")} onPredict={id=>{setSelId(id);setView("predict");setMyName((db.parts||[]).find(x=>x.id===id)?.name||myName);}} onShare={p=>setShareP(p)}/>}
+      {tab==="elim"&&<EliminatoriaTab db={db} upDb={upDb} allM={allM}/>}
         {tab==="partidos"&&<PartidosTab allM={allM}/>}
         {tab==="reglas"&&<ReglasTab/>}
       </div>}
