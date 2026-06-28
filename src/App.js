@@ -1667,3 +1667,4 @@ const S={
   chipA:{background:"rgba(16,185,129,0.12)",borderColor:"rgba(16,185,129,0.4)",color:"#10b981"},
   fl:{fontSize:13,color:"#4a5568",marginBottom:5},
 };
+// updated domingo, 28 de junio de 2026, 14:49:10 CEST
