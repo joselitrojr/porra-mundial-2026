@@ -987,7 +987,7 @@ export default function App(){
           </div>
         )}
         {tab==="pronos"&&<PronosTab db={db} scores={scores} closed={closed} allM={allM} onRegister={()=>setView("register")} onPredict={id=>{setSelId(id);setView("predict");setMyName((db.parts||[]).find(x=>x.id===id)?.name||myName);}} onShare={p=>setShareP(p)}/>}
-      {tab==="elim"&&<EliminatoriaTab db={db} upDb={upDb} allM={allM}/>}
+      {tab==="elim"{tab==="elim"&&<EliminatoriaTab db={db} upDb={upDb} allM={allM}/>}{tab==="elim"&&<EliminatoriaTab db={db} upDb={upDb} allM={allM}/>}<div style={{minHeight:"60vh"}}><EliminatoriaTab db={db} upDb={upDb} allM={allM}/></div>}
         {tab==="partidos"&&<PartidosTab allM={allM}/>}
         {tab==="reglas"&&<ReglasTab/>}
       </div>}
