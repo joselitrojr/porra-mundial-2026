@@ -94,8 +94,8 @@ const PM = [
   {id:"l6",l:"Croacia 🇭🇷",v:"Ghana 🇬🇭",g:"L",d:"2026-06-27",j:3},
 ];
 
-const MULT={grupos:1,octavos:1.5,cuartos:2,semifinales:3,final:5};
-const PHL={grupos:"Grupos",octavos:"Octavos",cuartos:"Cuartos",semifinales:"Semis",final:"Final"};
+const MULT={grupos:1,dieciseisavos:1,octavos:1.5,cuartos:2,semifinales:3,final:5};
+const PHL={grupos:"Grupos",dieciseisavos:"1/16",octavos:"Octavos",cuartos:"Cuartos",semifinales:"Semis",final:"Final"};
 const CUOTA=20;
 const PIN="4805";
 const PRIMER_PARTIDO=new Date("2026-06-11T21:00:00+02:00");
@@ -138,7 +138,12 @@ function totPts(part,allM,rPre,rSpc){
   t+=prePts(part.pre||{},rPre);
   t+=spcPts(part.spc||{},rSpc);
   const fet=part.fetiche||null;
-  (allM||[]).forEach(m=>{t+=mPts((part.mp||{})[m.id],m.result,m.ph||"grupos",m.id===fet);});
+  const penaltis=part.penaltis||{};
+  (allM||[]).forEach(m=>{
+    t+=mPts((part.mp||{})[m.id],m.result,m.ph||"grupos",m.id===fet);
+    // Bono penaltis: +3 si acertó que iba a penaltis y el admin lo confirmó
+    if(penaltis[m.id]&&m.fueAPenaltis)t+=3;
+  });
   return Math.round(t*10)/10;
 }
 
@@ -688,7 +693,7 @@ export default function App(){
   const loadDraft=useCallback(async(name)=>await dbGet("draft_"+name.trim().toLowerCase().replace(/\s+/g,"_")),[]);
   const deleteDraft=useCallback(async(name)=>await dbSet("draft_"+name.trim().toLowerCase().replace(/\s+/g,"_"),null),[]);
 
-  const allM=[...PM.map(m=>({...m,ph:"grupos",result:(db.results||{})[m.id]||null})),...(db.extraM||[])];
+  const allM=[...PM.map(m=>({...m,ph:"grupos",result:(db.results||{})[m.id]||null})),...(db.extraM||[]).map(m=>({...m,result:m.result||(db.results||{})[m.id]||null}))];
   const closed=isPast(db.deadline);
   const scores=(db.parts||[]).map(p=>({...p,tot:totPts(p,allM,db.rPre,db.rSpc)})).sort((a,b)=>b.tot-a.tot);
   const bote=(db.parts||[]).length*CUOTA;
@@ -894,7 +899,7 @@ function RegisterView({db,upDb,closed,saveDraft,loadDraft,deleteDraft,onDone,onB
   const[saving,setSaving]=useState(false);
   const[hasDraft,setHasDraft]=useState(false);
   const[draftLoading,setDraftLoading]=useState(false);
-  const[draft,setDraft]=useState({pre:{campeon:"",subcampeon:"",tercero:"",goleador:"",mvp:"",semis:["","","",""]},spc:{expulsado:"",hattrick:"",revelacion:"",goleada:""},mp:{},fetiche:null});
+  const[draft,setDraft]=useState({pre:{campeon:"",subcampeon:"",tercero:"",goleador:"",mvp:"",semis:["","","",""]},spc:{expulsado:"",hattrick:"",revelacion:"",goleada:""},mp:{},fetiche:null,penaltis:{}});
   const[sec,setSec]=useState("pre");
   const[gr,setGr]=useState("A");
   useEffect(()=>{if(name.trim()&&step==="predict"){const t=setTimeout(()=>saveDraft(name,draft),1500);return()=>clearTimeout(t);}},[draft,name,step,saveDraft]);
@@ -907,6 +912,23 @@ function RegisterView({db,upDb,closed,saveDraft,loadDraft,deleteDraft,onDone,onB
   const upSpc=(k,v)=>setDraft(d=>({...d,spc:{...d.spc,[k]:v}}));
   const upM=(id,side,v)=>setDraft(d=>({...d,mp:{...d.mp,[id]:{...(d.mp[id]||{}),[side]:v}}}));
   const setFetiche=id=>setDraft(d=>({...d,fetiche:d.fetiche===id?null:id}));
+  const setPenalti=(id,ph)=>setDraft(d=>{
+    const current=d.penaltis||{};
+    // Only one per ronda — remove others in same phase first
+    const filtered=Object.fromEntries(Object.entries(current).filter(([k])=>{
+      const m=PM.find(x=>x.id===k)||(d.mp||{})[k];
+      return true; // extraM partidos: allow
+    }));
+    // Remove all others in same ph
+    const newP={};
+    Object.entries(filtered).forEach(([k,v])=>{
+      // We don't have easy access to ph here, so we store ph in the value
+      if(v!==ph)newP[k]=v;
+    });
+    if(current[id])return{...d,penaltis:newP}; // toggle off
+    newP[id]=ph; // mark with ph so we can filter by ronda
+    return{...d,penaltis:newP};
+  });
   if(closed)return(<div style={S.app}><div style={S.hdr}><div style={S.hdrRow}><button style={S.backBtn} onClick={onBack}>◀</button><div style={{color:"#e8b923",fontWeight:800}}>Registro</div><div/></div></div><div style={{...S.content,textAlign:"center",paddingTop:60}}><div style={{fontSize:48}}>🔒</div><div style={{color:"#ff6b35",fontWeight:700,fontSize:18,marginTop:12}}>Pronósticos cerrados</div></div></div>);
   return(
     <div style={S.app}>
@@ -954,7 +976,7 @@ function RegisterView({db,upDb,closed,saveDraft,loadDraft,deleteDraft,onDone,onB
           <div style={S.content}>
             {sec==="pre"&&<PreSec pre={draft.pre} upPre={upPre} upSemi={upSemi} locked={false}/>}
             {sec==="grupos"&&<GruposSec mp={draft.mp} gr={gr} setGr={setGr} upM={upM} grupoM={PM.filter(m=>m.g===gr)} results={{}} locked={false} fetiche={draft.fetiche} setFetiche={setFetiche}/>}
-            {sec==="elim"&&<ElimSec mp={draft.mp} upM={upM} elimM={[]} locked={false} fetiche={draft.fetiche} setFetiche={setFetiche}/>}
+            {sec==="elim"&&<ElimSec mp={draft.mp} upM={upM} elimM={[]} locked={false} fetiche={draft.fetiche} setFetiche={setFetiche} penaltis={draft.penaltis||{}} setPenalti={setPenalti}/>}
             {sec==="retos"&&<RetosSec spc={draft.spc} upSpc={upSpc} locked={false}/>}
             <div style={{height:10}}/>
             {!draft.fetiche&&<div style={{background:"rgba(26,20,0,0.8)",border:"1px solid rgba(232,185,35,0.3)",borderRadius:8,padding:"8px 12px",fontSize:12,color:"#e8b923",marginBottom:10}}>⭐ ¡No olvides marcar tu partido fetiche!</div>}
@@ -980,6 +1002,14 @@ function PredictView({p,allM,db,onSave,onBack}){
   const upSpc=(k,v)=>setData(d=>({...d,spc:{...d.spc,[k]:v}}));
   const upM=(id,side,v)=>setData(d=>({...d,mp:{...d.mp,[id]:{...(d.mp[id]||{}),[side]:v}}}));
   const setFetiche=id=>setData(d=>({...d,fetiche:d.fetiche===id?null:id}));
+  const setPenalti=(id,ph)=>setData(d=>{
+    const current=d.penaltis||{};
+    const newP={};
+    Object.entries(current).forEach(([k,v])=>{if(v!==ph)newP[k]=v;});
+    if(current[id])return{...d,penaltis:newP};
+    newP[id]=ph;
+    return{...d,penaltis:newP};
+  });
   const mp=data.mp||{};
   return(
     <div style={S.app}>
@@ -1005,7 +1035,7 @@ function PredictView({p,allM,db,onSave,onBack}){
       <div style={S.content}>
         {sec==="pre"&&<PreSec pre={data.pre} upPre={upPre} upSemi={upSemi} locked={locked&&!!db.rPre}/>}
         {sec==="grupos"&&<GruposSec mp={mp} gr={gr} setGr={setGr} upM={upM} grupoM={grupoM} results={db.results||{}} locked={locked} fetiche={data.fetiche} setFetiche={setFetiche}/>}
-        {sec==="elim"&&<ElimSec mp={mp} upM={upM} elimM={elimM} locked={locked} fetiche={data.fetiche} setFetiche={setFetiche}/>}
+        {sec==="elim"&&<ElimSec mp={mp} upM={upM} elimM={elimM} locked={locked} fetiche={data.fetiche} setFetiche={setFetiche} penaltis={data.penaltis||{}} setPenalti={locked?null:setPenalti}/>}
         {sec==="retos"&&<RetosSec spc={data.spc} upSpc={upSpc} locked={locked}/>}
         {!locked&&<><div style={{height:10}}/><button style={{...S.btnGold,width:"100%",padding:"14px",fontSize:15}} onClick={async()=>{setSaving(true);await onSave(data);setSaving(false);}}>💾 Confirmar y bloquear</button><div style={{color:"#2d3748",fontSize:11,textAlign:"center",marginTop:5}}>⚠ No podrás modificarlos después</div></>}
       </div>
@@ -1089,7 +1119,7 @@ function GruposSec({mp,gr,setGr,upM,grupoM,results,locked,fetiche,setFetiche}){
               <input type="number" min={0} max={20} value={pred.v||""} onChange={e=>!locked&&upM(m.id,"v",e.target.value)} style={{...S.scoreI,opacity:locked?.5:1,...(isFet?{borderColor:"rgba(232,185,35,0.5)"}:{})}} disabled={locked} placeholder="?"/>
               <div style={{fontWeight:600,color:"#e2e8f0",fontSize:12,lineHeight:1.3}}>{m.v}</div>
             </div>
-            {res&&<div style={{textAlign:"center",fontSize:11,marginTop:6}}><span style={{color:"#10b981"}}>Real: {res.l}–{res.v}</span>{pts!==null&&<span style={{color:isFet?"#e8b923":"#10b981",marginLeft:8,fontWeight:700}}>{isFet?"⭐":""} +{pts}pts</span>}</div>}
+            {res&&<div style={{textAlign:"center",fontSize:11,marginTop:6}}><span style={{color:"#10b981"}}>Real: {res.l}–{res.v}</span>{pts!==null&&<span style={{color:isFet?"#e8b923":"#10b981",marginLeft:8,fontWeight:700}}>{isFet?"⭐":""} +{pts}pts</span>}{m.fueAPenaltis&&<span style={{color:"#818cf8",marginLeft:6,fontWeight:700}}>🥅{isPen?" +3pts":" (no apostaste)"}</span>}</div>}
           </div>
         );
       })}
@@ -1097,25 +1127,30 @@ function GruposSec({mp,gr,setGr,upM,grupoM,results,locked,fetiche,setFetiche}){
   );
 }
 
-function ElimSec({mp,upM,elimM,locked,fetiche,setFetiche}){
+function ElimSec({mp,upM,elimM,locked,fetiche,setFetiche,penaltis,setPenalti}){
   if(!elimM||elimM.length===0)return(
     <div style={{...S.empty,paddingTop:50}}>
       <div style={{fontSize:36}}>⏳</div>
       <div style={{color:"#2d3748",marginTop:8,fontWeight:600}}>Los partidos de eliminatoria aparecerán aquí</div>
     </div>
   );
+  const rondas=["dieciseisavos","octavos","cuartos","semifinales"];
   return(
     <div>
+      {setPenalti&&<div style={{fontSize:11,color:"#818cf8",marginBottom:10,background:"rgba(99,102,241,0.08)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:8,padding:"7px 12px"}}>🥅 Marca un partido por ronda que crees que irá a penaltis. Si aciertas, +3 pts extra.</div>}
       {elimM.map(m=>{
-        const pred=mp[m.id]||{},res=m.result,pts=res?mPts(pred,res,m.ph,m.id===fetiche):null,isFet=m.id===fetiche;
+        const pred=mp[m.id]||{},res=m.result,pts=res?mPts(pred,res,m.ph,m.id===fetiche):null,isFet=m.id===fetiche,isPen=penaltis&&!!penaltis[m.id];
         return(
-          <div key={m.id} style={{...S.mCard,borderColor:isFet?"rgba(232,185,35,0.5)":res?"rgba(16,185,129,0.25)":"rgba(255,255,255,0.06)"}}>
+          <div key={m.id} style={{...S.mCard,borderColor:isFet?"rgba(232,185,35,0.5)":isPen?"rgba(129,140,248,0.4)":res?"rgba(16,185,129,0.25)":"rgba(255,255,255,0.06)"}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,alignItems:"center"}}>
               <div><span style={{fontSize:11,color:"#2d3748"}}>{fd(m.date||"")}</span><span style={{fontSize:11,color:"#60a5fa",fontWeight:700,marginLeft:8}}>{PHL[m.ph]} ·×{MULT[m.ph]}</span></div>
               <div style={{display:"flex",alignItems:"center",gap:6}}>
                 {isFet&&<span style={{fontSize:10,color:"#e8b923",fontWeight:700}}>×5/×3</span>}
                 {!locked&&<button onClick={()=>setFetiche(m.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,padding:0,opacity:isFet?1:.25,filter:isFet?"none":"grayscale(1)"}}>⭐</button>}
                 {locked&&isFet&&<span>⭐</span>}
+                {setPenalti&&!locked&&<button onClick={()=>setPenalti(m.id,m.ph)} title="Marcar como que va a penaltis (+3pts si aciertas)" style={{background:isPen?"rgba(99,102,241,0.2)":"none",border:isPen?"1px solid #818cf8":"none",borderRadius:6,cursor:"pointer",fontSize:16,padding:"2px 5px",opacity:isPen?1:.3}}>🥅</button>}
+                {setPenalti&&locked&&isPen&&<span style={{fontSize:16}}>🥅</span>}
+                {m.fueAPenaltis&&isPen&&<span style={{fontSize:10,color:"#818cf8",fontWeight:700}}>+3</span>}
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 44px 14px 44px 1fr",alignItems:"center",gap:4}}>
@@ -1125,7 +1160,7 @@ function ElimSec({mp,upM,elimM,locked,fetiche,setFetiche}){
               <input type="number" min={0} max={20} value={pred.v||""} onChange={e=>!locked&&upM(m.id,"v",e.target.value)} style={{...S.scoreI,opacity:locked?.5:1}} disabled={locked} placeholder="?"/>
               <div style={{fontWeight:600,color:"#e2e8f0",fontSize:12}}>{m.v}</div>
             </div>
-            {res&&<div style={{textAlign:"center",fontSize:11,marginTop:6}}><span style={{color:"#10b981"}}>Real: {res.l}–{res.v}</span>{pts!==null&&<span style={{color:isFet?"#e8b923":"#10b981",marginLeft:8,fontWeight:700}}>{isFet?"⭐":""} +{pts}pts</span>}</div>}
+            {res&&<div style={{textAlign:"center",fontSize:11,marginTop:6}}><span style={{color:"#10b981"}}>Real: {res.l}–{res.v}</span>{pts!==null&&<span style={{color:isFet?"#e8b923":"#10b981",marginLeft:8,fontWeight:700}}>{isFet?"⭐":""} +{pts}pts</span>}{m.fueAPenaltis&&<span style={{color:"#818cf8",marginLeft:6,fontWeight:700}}>🥅{isPen?" +3pts":" (no apostaste)"}</span>}</div>}
           </div>
         );
       })}
@@ -1293,11 +1328,12 @@ function AdminView({db,upDb,allM,onBack}){
   const[er,setEr]=useState({l:"",v:""});
   const[pf,setPf]=useState(db.rPre||{campeon:"",subcampeon:"",tercero:"",goleador:"",mvp:"",semis:["","","",""]});
   const[sf,setSf]=useState(db.rSpc||{expulsado:"",hattrick:"",revelacion:"",goleada:""});
-  const[nm,setNm]=useState({l:"",v:"",ph:"octavos",date:""});
+  const[nm,setNm]=useState({l:"",v:"",ph:"dieciseisavos",date:""});
   const[saving,setSaving]=useState(false);
   const gs=Object.keys(GR);
   const isElim=gf==="ELIM",shown=isElim?allM.filter(m=>m.ph!=="grupos"):allM.filter(m=>m.g===gf);
   const saveRes=async id=>{setSaving(true);const newRes={...(db.results||{}),[id]:er};await upDb("results",newRes);const nEM=(db.extraM||[]).map(m=>m.id===id?{...m,result:er}:m);await upDb("extraM",nEM);setEid(null);setSaving(false);};
+  const togglePenaltis=async id=>{const nEM=(db.extraM||[]).map(m=>m.id===id?{...m,fueAPenaltis:!m.fueAPenaltis}:m);await upDb("extraM",nEM);};
   const resetRes=async id=>{const r={...(db.results||{})};delete r[id];await upDb("results",r);};
   return(
     <div style={S.app}>
@@ -1329,6 +1365,7 @@ function AdminView({db,upDb,allM,onBack}){
                     <div style={{fontSize:10,color:"#2d3748"}}>{fd(m.d||m.date||"")}{m.ph!=="grupos"?" · "+PHL[m.ph]:""}</div>
                     {res&&<div style={{display:"flex",alignItems:"center",gap:8,marginTop:2}}><span style={{color:"#10b981",fontWeight:700,fontSize:11}}>✅ {res.l}–{res.v}</span><button style={{background:"#7f1d1d",border:"none",borderRadius:4,padding:"1px 6px",color:"#fff",fontSize:10,cursor:"pointer"}} onClick={()=>resetRes(m.id)}>Reset</button></div>}
                   </div>
+                  {m.ph!=="grupos"&&<button style={{background:m.fueAPenaltis?"rgba(99,102,241,0.3)":"rgba(0,0,0,0.3)",border:"1px solid "+( m.fueAPenaltis?"#818cf8":"rgba(255,255,255,0.1)"),borderRadius:6,padding:"2px 7px",color:m.fueAPenaltis?"#818cf8":"#4a5568",fontSize:11,cursor:"pointer",marginRight:4}} onClick={()=>togglePenaltis(m.id)}>🥅{m.fueAPenaltis?" Penaltis ✓":" ¿Penaltis?"}</button>}
                   {eid===m.id?(
                     <div style={{display:"flex",gap:3,alignItems:"center",flexShrink:0}}>
                       <input type="number" min={0} max={20} value={er.l} onChange={e=>setEr({...er,l:e.target.value})} style={{...S.scoreI,width:34}}/>
@@ -1377,11 +1414,29 @@ function AdminView({db,upDb,allM,onBack}){
               <TeamSel val={nm.l} onChange={v=>setNm({...nm,l:v})} placeholder="Local"/>
               <TeamSel val={nm.v} onChange={v=>setNm({...nm,v:v})} placeholder="Visitante"/>
               <select style={S.sel} value={nm.ph} onChange={e=>setNm({...nm,ph:e.target.value})}>
-                {["octavos","cuartos","semifinales","final"].map(p=><option key={p} value={p}>{PHL[p]} ·×{MULT[p]}</option>)}
+                {["dieciseisavos","octavos","cuartos","semifinales","final"].map(p=><option key={p} value={p}>{PHL[p]} ·×{MULT[p]}</option>)}
               </select>
               <input style={S.inp} type="date" value={nm.date} onChange={e=>setNm({...nm,date:e.target.value})}/>
             </div>
-            <button style={{...S.btnGold,width:"100%"}} onClick={async()=>{if(!nm.l||!nm.v)return;await upDb("extraM",[...(db.extraM||[]),{...nm,id:"x_"+Date.now(),result:null,g:null}]);setNm({l:"",v:"",ph:"octavos",date:""});}}>➕ Añadir partido</button>
+            <button style={{...S.btnGold,width:"100%"}} onClick={async()=>{if(!nm.l||!nm.v)return;await upDb("extraM",[...(db.extraM||[]),{...nm,id:"x_"+Date.now(),result:null,g:null}]);setNm({l:"",v:"",ph:"dieciseisavos",date:""});}}>➕ Añadir partido</button>
+            <div style={{marginTop:12,background:"rgba(0,0,0,0.3)",border:"1px solid rgba(232,185,35,0.2)",borderRadius:10,padding:"12px"}}>
+              <div style={{fontSize:12,color:"#e8b923",fontWeight:700,marginBottom:6}}>⚡ Cargar dieciseisavos del Mundial 2026</div>
+              <div style={{fontSize:11,color:"#4a5568",marginBottom:10}}>Añade los 16 partidos de golpe</div>
+              <button style={{...S.btnGold,width:"100%",background:"linear-gradient(135deg,#065f46,#047857)"}} onClick={async()=>{
+                if(!window.confirm("¿Añadir los 16 partidos de dieciseisavos?"))return;
+                const d16=[
+                  {l:"Alemania 🇩🇪",v:"Paraguay 🇵🇾",date:"2026-06-28"},{l:"Francia 🇫🇷",v:"Suecia 🇸🇪",date:"2026-06-28"},
+                  {l:"Sudáfrica 🇿🇦",v:"Canadá 🇨🇦",date:"2026-06-29"},{l:"Países Bajos 🇳🇱",v:"Marruecos 🇲🇦",date:"2026-06-29"},
+                  {l:"Portugal 🇵🇹",v:"Croacia 🇭🇷",date:"2026-06-30"},{l:"España 🇪🇸",v:"Austria 🇦🇹",date:"2026-06-30"},
+                  {l:"EE.UU. 🇺🇸",v:"Bosnia 🇧🇦",date:"2026-07-01"},{l:"Bélgica 🇧🇪",v:"Senegal 🇸🇳",date:"2026-07-01"},
+                  {l:"Brasil 🇧🇷",v:"Japón 🇯🇵",date:"2026-07-02"},{l:"Costa de Marfil 🇨🇮",v:"Noruega 🇳🇴",date:"2026-07-02"},
+                  {l:"México 🇲🇽",v:"Ecuador 🇪🇨",date:"2026-07-03"},{l:"Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿",v:"RD Congo 🇨🇩",date:"2026-07-03"},
+                  {l:"Argentina 🇦🇷",v:"Curazao 🇨🇼",date:"2026-07-04"},{l:"Australia 🇦🇺",v:"Egipto 🇪🇬",date:"2026-07-04"},
+                  {l:"Suiza 🇨🇭",v:"Argelia 🇩🇿",date:"2026-07-05"},{l:"Colombia 🇨🇴",v:"Ghana 🇬🇭",date:"2026-07-05"},
+                ].map((m,i)=>({...m,ph:"dieciseisavos",id:"d16_"+(Date.now()+i),result:null,g:null}));
+                await upDb("extraM",[...(db.extraM||[]),...d16]);
+              }}>⚡ Cargar los 16 partidos</button>
+            </div>
             {(db.extraM||[]).map(m=>(
               <div key={m.id} style={{...S.mCard,display:"flex",flexDirection:"row",alignItems:"center",gap:8,marginTop:6}}>
                 <div style={{flex:1}}><div style={{fontWeight:600,color:"#e2e8f0",fontSize:12}}>{m.l} vs {m.v}</div><div style={{fontSize:10,color:"#4a5568"}}>{PHL[m.ph]} · {fd(m.date||"")}</div></div>
