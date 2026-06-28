@@ -1446,3 +1446,202 @@ const S={
   chipA:{background:"rgba(16,185,129,0.12)",borderColor:"rgba(16,185,129,0.4)",color:"#10b981"},
   fl:{fontSize:13,color:"#4a5568",marginBottom:5},
 };
+
+// ─── APP ─────────────────────────────────────────────────────────────────────
+export default function App(){
+  const[db,setDb]=useState({parts:[],extraM:[],results:{},rPre:null,rSpc:null,deadline:"",loaded:false});
+  const[view,setView]=useState("welcome");
+  const[tab,setTab]=useState("ranking");
+  const[admin,setAdmin]=useState(false);
+  const[pin,setPin]=useState("");
+  const[showPin,setShowPin]=useState(false);
+  const[selId,setSelId]=useState(null);
+  const[shareP,setShareP]=useState(null);
+  const[prevRanks,setPrevRanks]=useState({});
+  const[myName,setMyName]=useState(()=>sessionStorage.getItem("myName")||null);
+  const[showAnnouncement,setShowAnnouncement]=useState(()=>{
+    const today=new Date();
+    const isJune11=today.getFullYear()===2026&&today.getMonth()===5&&today.getDate()===11;
+    const seenToday=sessionStorage.getItem("ann_seen_"+today.toDateString());
+    return isJune11&&!seenToday;
+  });
+
+  const load=useCallback(async()=>{
+    const[parts,extraM,results,rPre,rSpc,deadline]=await Promise.all([
+      dbGet("parts"),dbGet("extraM"),dbGet("results"),dbGet("rPre"),dbGet("rSpc"),dbGet("deadline")
+    ]);
+    const dl=deadline||"";
+    const newDb={parts:parts||[],extraM:extraM||[],results:results||{},rPre:rPre||null,rSpc:rSpc||null,deadline:dl,loaded:true};
+    setDb(prev=>{
+      if(prev.loaded&&prev.parts&&prev.parts.length>0){
+        const allMprev=[...PM.map(m=>({...m,ph:"grupos",result:(prev.results||{})[m.id]||null})),...(prev.extraM||[])];
+        const prevSorted=[...(prev.parts||[])].map(p=>({...p,tot:totPts(p,allMprev,prev.rPre,prev.rSpc)})).sort((a,b)=>b.tot-a.tot);
+        const ranks={};prevSorted.forEach((p,i)=>{ranks[p.id]=i+1;});
+        setPrevRanks(ranks);
+      }
+      return newDb;
+    });
+  },[]);
+
+  useEffect(()=>{load();},[load]);
+  useEffect(()=>{if(db.loaded&&view==="welcome"&&sessionStorage.getItem("seen"))setView("main");},[db.loaded,view]);
+  useEffect(()=>{const t=setInterval(load,20000);return()=>clearInterval(t);},[load]);
+
+  const upDb=async(key,val)=>{await dbSet(key,val);setDb(d=>({...d,[key]:val}));};
+  const saveDraft=useCallback(async(name,draftData)=>{await dbSet("draft_"+name.trim().toLowerCase().replace(/\s+/g,"_"),{...draftData,_draftName:name,_savedAt:new Date().toISOString()});},[]);
+  const loadDraft=useCallback(async(name)=>await dbGet("draft_"+name.trim().toLowerCase().replace(/\s+/g,"_")),[]);
+  const deleteDraft=useCallback(async(name)=>await dbSet("draft_"+name.trim().toLowerCase().replace(/\s+/g,"_"),null),[]);
+
+  const allM=[...PM.map(m=>({...m,ph:"grupos",result:(db.results||{})[m.id]||null})),...(db.extraM||[]).map(m=>({...m,result:m.result||(db.results||{})[m.id]||null}))];
+  const closed=isPast(db.deadline);
+  const scores=(db.parts||[]).map(p=>({...p,tot:totPts(p,allM,db.rPre,db.rSpc)})).sort((a,b)=>b.tot-a.tot);
+  const bote=(db.parts||[]).length*CUOTA;
+  const allLocked=(db.parts||[]).length>0&&(db.parts||[]).every(x=>x.locked);
+  const jornadasCompletas=[1,2,3].filter(j=>jornadaCompleta(j,allM));
+
+  if(!db.loaded)return(
+    <div style={{...S.app,display:"flex",alignItems:"center",justifyContent:"center",height:"100vh"}}>
+      <div style={{textAlign:"center"}}><div style={{fontSize:48}}>⚽</div><div style={{color:"#fbbf24",marginTop:8,fontSize:14}}>Cargando…</div></div>
+    </div>
+  );
+
+  if(view==="welcome")return(
+    <div style={{...S.app,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"24px",background:"radial-gradient(ellipse at 50% 0%,#0a1628 0%,#0d1a0d 40%,#1a0800 100%)"}}>
+      <div style={{fontSize:64,marginBottom:8}}>🏆</div>
+      <div style={{fontSize:32,fontWeight:900,background:"linear-gradient(135deg,#e8b923,#fff5c0,#e8b923)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:3,marginBottom:4}}>SÚPER PORRA</div>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
+        <div style={{height:1,width:40,background:"linear-gradient(90deg,transparent,#c8102e)"}}/>
+        <div style={{fontSize:12,color:"#c8102e",letterSpacing:5,fontWeight:700}}>MUNDIAL 2026</div>
+        <div style={{height:1,width:40,background:"linear-gradient(90deg,#c8102e,transparent)"}}/>
+      </div>
+      <CountdownWidget/>
+      <div style={{width:"100%",maxWidth:400,background:"linear-gradient(135deg,rgba(10,15,30,0.95),rgba(10,20,12,0.95))",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"18px",marginBottom:24}}>
+        <div style={{color:"#e8b923",fontWeight:700,fontSize:13,marginBottom:12}}>📋 Cómo funciona</div>
+        {[["🎟","Inscripción","20€ — una vez confirmado, bloqueado para siempre"],["⚽","72 partidos","Pronostica todos los de fase de grupos"],["⭐","Partido fetiche","Si aciertas exacto ×5, si aciertas 1X2 ×3"],["📈","Multiplicadores","×1 grupos · ×1 dieciseisavos · hasta ×5 final"],["💰","Premios","60% · 25% · 15% del bote total"]].map(([i,t,d])=>(
+          <div key={t} style={{display:"flex",gap:10,marginBottom:10}}>
+            <span style={{fontSize:16,flexShrink:0}}>{i}</span>
+            <div><div style={{color:"#fff",fontWeight:600,fontSize:13}}>{t}</div><div style={{color:"#4a5568",fontSize:12}}>{d}</div></div>
+          </div>
+        ))}
+      </div>
+      <button style={{...S.btnGold,width:"100%",maxWidth:400,padding:"16px",fontSize:15,borderRadius:14,letterSpacing:1}} onClick={()=>{sessionStorage.setItem("seen","1");setView("main");}}>
+        ¡Entrar a la porra! →
+      </button>
+    </div>
+  );
+
+  if(view==="register")return <RegisterView db={db} upDb={upDb} closed={closed} saveDraft={saveDraft} loadDraft={loadDraft} deleteDraft={deleteDraft} onDone={name=>{if(name){setMyName(name);sessionStorage.setItem("myName",name);}setView("main");}} onBack={()=>setView("main")}/>;
+  if(view==="predict"&&selId){
+    const p=(db.parts||[]).find(x=>x.id===selId);
+    if(!p){setView("main");return null;}
+    return <PredictView p={p} allM={allM} db={db} onSave={async upd=>{await upDb("parts",(db.parts||[]).map(x=>x.id===upd.id?{...upd,locked:true}:x));setView("main");setTab("ranking");}} onBack={()=>setView("main")}/>;
+  }
+  if(view==="admin")return <AdminView db={db} upDb={upDb} allM={allM} onBack={()=>setView("main")}/>;
+  if(view==="compare"&&selId){
+    const p=(db.parts||[]).find(x=>x.id===selId);
+    if(!p){setView("main");return null;}
+    return <CompareView p={p} allM={allM} scores={scores} db={db} bote={bote} onBack={()=>setView("main")}/>;
+  }
+
+  return(
+    <div style={S.app}>
+      {showAnnouncement&&<MundialAnnouncement onClose={()=>{sessionStorage.setItem("ann_seen_"+new Date().toDateString(),"1");setShowAnnouncement(false);}}/>}
+      {shareP&&<ShareCard participant={shareP} allM={allM} onClose={()=>setShareP(null)}/>}
+      <div style={S.hdr}>
+        <div style={S.hdrRow}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:22}}>⚽</span>
+            <div><div style={S.t1}>SÚPER PORRA</div><div style={S.t2}>MUNDIAL 2026</div></div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={S.bote}>💰 {bote}€</div>
+            <div style={{fontSize:10,color:"#4a5568",marginTop:1}}>{bote/CUOTA||0} participante{bote/CUOTA!==1?"s":""}</div>
+          </div>
+        </div>
+        {closed&&<div style={S.bannerR}>🔒 Pronósticos cerrados{db.deadline?" · "+fd(db.deadline):""}</div>}
+        {db.deadline&&!closed&&<div style={S.bannerG}>⏰ Plazo: <strong>{fd(db.deadline)}</strong></div>}
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:8,display:"flex",justifyContent:"flex-end"}}>
+          {admin?(
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              <span style={{fontSize:11,color:"#4a5568",background:"rgba(255,255,255,0.05)",padding:"2px 8px",borderRadius:10}}>⚙️ Admin</span>
+              <button style={S.btnSm} onClick={()=>setView("admin")}>Panel</button>
+              <button style={{...S.btnSm,background:"#333"}} onClick={()=>setAdmin(false)}>Salir</button>
+            </div>
+          ):showPin?(
+            <div style={{display:"flex",gap:5,alignItems:"center"}}>
+              <input type="password" placeholder="PIN" value={pin} onChange={e=>setPin(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){if(pin===PIN){setAdmin(true);setShowPin(false);setPin("");}else alert("PIN incorrecto");}}} style={S.pinInp}/>
+              <button style={S.btnSm} onClick={()=>{if(pin===PIN){setAdmin(true);setShowPin(false);setPin("");}else alert("PIN incorrecto");}}>OK</button>
+              <button style={{...S.btnSm,background:"#222"}} onClick={()=>setShowPin(false)}>✕</button>
+            </div>
+          ):(
+            <button style={S.btnGhost} onClick={()=>setShowPin(true)}>🔒 Admin</button>
+          )}
+        </div>
+      </div>
+
+      <div style={S.tabs}>
+        {[["ranking","📊 Ranking"],["pronos","🎯 Pronos"],["partidos","⚽ Partidos"],...(allM.some(m=>m.ph!=="grupos")?[["elim","🏟 Elim."]]:[]),...(jornadasCompletas.length>0?[["jornadas","📈 Jornadas"]]:[]),["chat","💬 Chat"],["reglas","📋 Reglas"]].map(([id,l])=>(
+          <button key={id} style={{...S.tab,...(tab===id?S.tabA:{})}} onClick={()=>setTab(id)}>{l}</button>
+        ))}
+      </div>
+
+      {tab!=="chat"&&tab!=="jornadas"&&tab!=="elim"&&<div style={S.content}>
+        {tab==="ranking"&&(
+          <div>
+            <CountdownWidget/>
+            {myName&&scores.length>0&&<MiPosicion scores={scores} myName={myName} bote={bote}/>}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
+              {[{pct:.6,l:"1er Premio",col:"#e8b923",ico:"🥇",bg:"linear-gradient(135deg,#422006,#78350f)",sh:"0 0 20px rgba(232,185,35,0.25)"},{pct:.25,l:"2º Premio",col:"#cbd5e1",ico:"🥈",bg:"linear-gradient(135deg,#1a1a2e,#16213e)",sh:"none"},{pct:.15,l:"3er Premio",col:"#cd7f32",ico:"🥉",bg:"linear-gradient(135deg,#1c0a00,#3b1f00)",sh:"none"}].map((p,i)=>(
+                <div key={i} style={{background:p.bg,border:"1px solid "+p.col+"44",borderRadius:12,padding:"12px 8px",textAlign:"center",boxShadow:p.sh}}>
+                  <div style={{fontSize:22}}>{p.ico}</div>
+                  <div style={{color:p.col,fontWeight:900,fontSize:20,marginTop:2}}>{Math.round(bote*p.pct)}€</div>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginTop:2}}>{p.l}</div>
+                </div>
+              ))}
+            </div>
+            {!allLocked&&scores.length>0&&scores.length>1&&<div style={{background:"rgba(37,99,235,0.1)",border:"1px solid rgba(37,99,235,0.25)",borderRadius:10,padding:"8px 14px",fontSize:12,color:"#93c5fd",marginBottom:10,textAlign:"center"}}>🔒 Pronósticos privados hasta que todos confirmen</div>}
+            {scores.length===0?<div style={S.empty}><div style={{fontSize:36}}>📊</div><div style={{marginTop:8}}>El ranking aparecerá cuando haya participantes</div></div>:
+              scores.map((p,i)=>{
+                const prevPos=prevRanks[p.id],curr=i+1,moved=prevPos&&prevPos!==curr?prevPos-curr:0;
+                const isMe=myName&&p.name===myName;
+                return(
+                  <div key={p.id} style={{...S.row,...(i===scores.length-1&&scores.length>1?{borderColor:"rgba(127,29,29,0.3)",background:"rgba(20,5,5,0.5)"}:{}),...(isMe?{border:"1px solid rgba(232,185,35,0.4)",background:"rgba(232,185,35,0.06)"}:{})}}>
+                    <Pos n={curr}/>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{fontWeight:700,color:isMe?"#e8b923":"#fff"}}>{p.name}</span>
+                        {isMe&&<span style={{fontSize:9,color:"#e8b923",background:"rgba(232,185,35,0.1)",border:"1px solid rgba(232,185,35,0.3)",borderRadius:8,padding:"1px 5px"}}>TÚ</span>}
+                        {moved!==0&&<span style={{fontSize:11,fontWeight:700,color:moved>0?"#10b981":"#ef4444"}}>{moved>0?"▲"+moved:"▼"+Math.abs(moved)}</span>}
+                      </div>
+                      <div style={{display:"flex",gap:6,marginTop:2,flexWrap:"wrap"}}>
+                        {allLocked&&p.pre?.campeon&&<div style={{fontSize:11,color:"#2d3748"}}>🏆 {p.pre.campeon.split(" ")[0]}</div>}
+                        {p.fetiche&&<div style={{fontSize:11,color:"#e8b923"}}>⭐ {(allM.find(m=>m.id===p.fetiche)||{l:"?"}).l?.split(" ")[0]}</div>}
+                      </div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontWeight:900,fontSize:20,color:i===0?"#e8b923":i<3?"#10b981":"#bbb"}}>{p.tot}<span style={{fontSize:11,color:"#2d3748",fontWeight:400}}> pts</span></div>
+                      {i<3&&bote>0&&<div style={{fontSize:11,color:"#10b981"}}>+{Math.round(bote*[.6,.25,.15][i])}€</div>}
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:4,marginLeft:4}}>
+                      <button style={{...S.btnGhost,fontSize:11,padding:"3px 7px"}} onClick={()=>{setSelId(p.id);setView("compare");}}>📊</button>
+                      <button style={{...S.btnGhost,fontSize:11,padding:"3px 7px"}} onClick={()=>setShareP(p)}>📤</button>
+                    </div>
+                  </div>
+                );
+              })
+            }
+            {scores.length>1&&<div style={{background:"linear-gradient(135deg,rgba(127,29,29,0.3),rgba(100,20,20,0.2))",border:"1px dashed rgba(220,38,38,0.4)",borderRadius:12,padding:"12px 14px",marginTop:10,display:"flex",gap:10,alignItems:"center"}}>
+              <span style={{fontSize:20}}>😎</span><div><div style={{fontWeight:700,color:"#ff6b35"}}>Farolillo Rojo</div><div style={{fontSize:12,color:"#4a5568"}}>¡Ronda épica para {scores[scores.length-1].name}!</div></div>
+            </div>}
+          </div>
+        )}
+        {tab==="pronos"&&<PronosTab db={db} scores={scores} closed={closed} allM={allM} onRegister={()=>setView("register")} onPredict={id=>{setSelId(id);setView("predict");setMyName((db.parts||[]).find(x=>x.id===id)?.name||myName);}} onShare={p=>setShareP(p)}/>}
+        {tab==="partidos"&&<PartidosTab allM={allM}/>}
+        {tab==="reglas"&&<ReglasTab/>}
+      </div>}
+      {tab==="elim"&&<EliminatoriaTab db={db} upDb={upDb} allM={allM}/>}
+      {tab==="jornadas"&&<JornadasTab jornadasCompletas={jornadasCompletas} allM={allM} parts={db.parts||[]}/>}
+      {tab==="chat"&&<ChatTab myName={myName} parts={db.parts||[]}/>}
+    </div>
+  );
+}
