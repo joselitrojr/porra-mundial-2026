@@ -654,6 +654,8 @@ function StatsJornadaInline({jornada, allM, parts}){
 function EliminatoriaTab({db, upDb, allM}){
   const[selName,setSelName]=useState("");
   const[view,setView]=useState("landing"); // landing | editing
+  const[saved,setSaved]=useState(false);
+  const save=()=>{setSaved(true);setTimeout(()=>setSaved(false),2000);};
   const parts=db.parts||[];
   const elimM=allM.filter(m=>m.ph!=="grupos");
   const p=parts.find(x=>x.name===selName);
@@ -709,8 +711,6 @@ function EliminatoriaTab({db, upDb, allM}){
   );
 
   // Editing view
-  const[saved,setSaved]=useState(false);
-  const save=async()=>{setSaved(true);setTimeout(()=>setSaved(false),2000);};
   const porFase=fases.map(ph=>({ph,ms:elimM.filter(m=>m.ph===ph)})).filter(x=>x.ms.length>0);
   return(
     <div style={{paddingBottom:80}}>
