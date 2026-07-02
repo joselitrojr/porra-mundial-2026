@@ -709,17 +709,24 @@ function EliminatoriaTab({db, upDb, allM}){
   );
 
   // Editing view
+  const[saved,setSaved]=useState(false);
+  const save=async()=>{setSaved(true);setTimeout(()=>setSaved(false),2000);};
   const porFase=fases.map(ph=>({ph,ms:elimM.filter(m=>m.ph===ph)})).filter(x=>x.ms.length>0);
   return(
-    <div>
+    <div style={{paddingBottom:80}}>
       <div style={{padding:"10px 16px",background:"rgba(0,0,0,0.5)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div>
           <div style={{fontSize:11,color:"#4a5568"}}>Pronósticos de</div>
           <div style={{fontWeight:800,fontSize:16,color:"#e8b923"}}>{selName}</div>
         </div>
-        <button onClick={()=>setView("landing")} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"7px 14px",color:"#a0aec0",cursor:"pointer",fontSize:13}}>
-          ← Volver
-        </button>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={save} style={{background:saved?"linear-gradient(135deg,#065f46,#047857)":"linear-gradient(135deg,#c8102e,#a00d25)",border:"none",borderRadius:10,padding:"8px 16px",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer"}}>
+            {saved?"✅ Guardado":"💾 Guardar"}
+          </button>
+          <button onClick={()=>setView("landing")} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"7px 14px",color:"#a0aec0",cursor:"pointer",fontSize:13}}>
+            ← Volver
+          </button>
+        </div>
       </div>
       <div style={{padding:"14px 16px"}}>
         <div style={{background:"rgba(99,102,241,0.1)",border:"1px solid rgba(99,102,241,0.25)",borderRadius:10,padding:"9px 12px",color:"#818cf8",fontSize:12,marginBottom:16}}>
@@ -770,6 +777,12 @@ function EliminatoriaTab({db, upDb, allM}){
             </div>
           );
         })}
+      </div>
+      {/* Botón flotante fijo abajo */}
+      <div style={{position:"fixed",bottom:0,left:0,right:0,padding:"10px 16px 20px",background:"rgba(8,8,16,0.95)",borderTop:"1px solid rgba(255,255,255,0.08)",backdropFilter:"blur(10px)",zIndex:100}}>
+        <button onClick={save} style={{width:"100%",padding:"13px",background:saved?"linear-gradient(135deg,#065f46,#047857)":"linear-gradient(135deg,#c8102e,#a00d25)",border:"none",borderRadius:12,color:"#fff",fontWeight:700,fontSize:14,cursor:"pointer",maxWidth:568,display:"block",margin:"0 auto"}}>
+          {saved?"✅ ¡Guardado!":"💾 Confirmar y guardar pronósticos"}
+        </button>
       </div>
     </div>
   );
