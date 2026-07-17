@@ -94,8 +94,8 @@ const PM = [
   {id:"l6",l:"Croacia 🇭🇷",v:"Ghana 🇬🇭",g:"L",d:"2026-06-27",j:3},
 ];
 
-const MULT={grupos:1,dieciseisavos:1,octavos:1.5,cuartos:2,semifinales:3,final:5};
-const PHL={grupos:"Grupos",dieciseisavos:"1/16",octavos:"Octavos",cuartos:"Cuartos",semifinales:"Semis",final:"Final"};
+const MULT={grupos:1,dieciseisavos:1,octavos:1.5,cuartos:2,semifinales:3,tercerpuesto:3,final:5};
+const PHL={grupos:"Grupos",dieciseisavos:"1/16",octavos:"Octavos",cuartos:"Cuartos",semifinales:"Semis",tercerpuesto:"3er Puesto",final:"Final"};
 const CUOTA=20;
 const PIN="4805";
 const PRIMER_PARTIDO=new Date("2026-06-11T21:00:00+02:00");
@@ -659,7 +659,7 @@ function EliminatoriaTab({db, upDb, allM}){
   const parts=db.parts||[];
   const elimM=allM.filter(m=>m.ph!=="grupos");
   const p=parts.find(x=>x.name===selName);
-  const fases=["dieciseisavos","octavos","cuartos","semifinales","final"];
+  const fases=["dieciseisavos","octavos","cuartos","semifinales","tercerpuesto","final"];
 
   const upM=async(id,side,v)=>{
     if(!p)return;
@@ -1357,7 +1357,7 @@ function AdminView({db,upDb,allM,onBack}){
               <TeamSel val={nm.l} onChange={v=>setNm({...nm,l:v})} placeholder="Local"/>
               <TeamSel val={nm.v} onChange={v=>setNm({...nm,v:v})} placeholder="Visitante"/>
               <select style={S.sel} value={nm.ph} onChange={e=>setNm({...nm,ph:e.target.value})}>
-                {["dieciseisavos","octavos","cuartos","semifinales","final"].map(p=><option key={p} value={p}>{PHL[p]} ·×{MULT[p]}</option>)}
+                {["dieciseisavos","octavos","cuartos","semifinales","tercerpuesto","final"].map(p=><option key={p} value={p}>{PHL[p]} ·×{MULT[p]}</option>)}
               </select>
               <input style={S.inp} type="date" value={nm.date} onChange={e=>setNm({...nm,date:e.target.value})}/>
             </div>
@@ -1460,6 +1460,23 @@ const S={
   fl:{fontSize:13,color:"#4a5568",marginBottom:5},
 };
 
+
+// ─── POPUP MESSI FINAL ────────────────────────────────────────────────────────
+function MessiFinalPopup({onClose}){
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px"}}>
+      <div style={{position:"relative",maxWidth:440,width:"100%",borderRadius:18,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.8)"}}>
+        {/* Botón cerrar arriba izquierda */}
+        <button onClick={onClose} style={{position:"absolute",top:12,left:12,zIndex:10,background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:20,padding:"7px 14px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
+          ← Ir a la app
+        </button>
+        {/* Imagen */}
+        <img src="/images/messi_final.jpg" alt="We Meet Again" style={{width:"100%",display:"block"}}/>
+      </div>
+    </div>
+  );
+}
+
 // ─── APP ─────────────────────────────────────────────────────────────────────
 export default function App(){
   const[db,setDb]=useState({parts:[],extraM:[],results:{},rPre:null,rSpc:null,deadline:"",loaded:false});
@@ -1478,6 +1495,7 @@ export default function App(){
     const seenToday=sessionStorage.getItem("ann_seen_"+today.toDateString());
     return isJune11&&!seenToday;
   });
+  const[showMessiPopup,setShowMessiPopup]=useState(true);
 
   const load=useCallback(async()=>{
     const[parts,extraM,results,rPre,rSpc,deadline]=await Promise.all([
@@ -1520,6 +1538,7 @@ export default function App(){
 
   if(view==="welcome")return(
     <div style={{...S.app,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"24px",background:"radial-gradient(ellipse at 50% 0%,#0a1628 0%,#0d1a0d 40%,#1a0800 100%)"}}>
+      {showMessiPopup&&<MessiFinalPopup onClose={()=>setShowMessiPopup(false)}/>}
       <div style={{fontSize:64,marginBottom:8}}>🏆</div>
       <div style={{fontSize:32,fontWeight:900,background:"linear-gradient(135deg,#e8b923,#fff5c0,#e8b923)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:3,marginBottom:4}}>SÚPER PORRA</div>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
@@ -1558,6 +1577,7 @@ export default function App(){
 
   return(
     <div style={S.app}>
+      {showMessiPopup&&<MessiFinalPopup onClose={()=>{setShowMessiPopup(false);}}/>}
       {showAnnouncement&&<MundialAnnouncement onClose={()=>{sessionStorage.setItem("ann_seen_"+new Date().toDateString(),"1");setShowAnnouncement(false);}}/>}
       {shareP&&<ShareCard participant={shareP} allM={allM} onClose={()=>setShareP(null)}/>}
       <div style={S.hdr}>
